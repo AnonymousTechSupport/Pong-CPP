@@ -1,0 +1,9 @@
+-x
+c++
+-std=c++23
+-I.
+-Isrc
+-Isrc/game
+-Isrc/platform
+-Isrc/renderer
+-Isrc/utils
