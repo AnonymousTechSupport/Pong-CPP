@@ -1,5 +1,6 @@
 #pragma once
 #include "renderer.h"
+#include "utils/math_utils.h"
 #include "utils/timer.h"
 #include "win32_window.h"
 
@@ -33,26 +34,20 @@ class Game
     bool m_initialised = false;
 
   private:
-    // PLAYER ENTITY
-    // #########################
     struct Player
     {
-        float x;
-        float y;
-        float w = 20.0f;
-        float h = 100.0f;
+        Vector2 pos{};
+        Vector2 size{};
+        ColorUtil color{};
         int velocity = 400; // pixels per second
     };
     std::unique_ptr<Player> m_player;
 
-    // ENEMY ENTITY
-    // #########################
     struct Enemy
     {
-        float x;
-        float y;
-        float w = 20.0f;
-        float h = 100.0f;
+        Vector2 pos{};
+        Vector2 size{};
+        ColorUtil color{};
         int velocity = 400; // pixels per second
     };
     std::unique_ptr<Enemy> m_enemy;

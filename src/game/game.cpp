@@ -1,7 +1,6 @@
 #include "game.h"
 #include "utils/input.h"
 #include "utils/logger.h"
-#include <windows.h>
 
 bool Game::Init(Window& window)
 {
@@ -33,7 +32,8 @@ void Game::Run(Window& window)
 {
     if (!m_initialised)
     {
-        Logger::Get().LogWarning("Attempted to run uninitialized game");
+        Logger::Get().LogWarning(
+            "Attempted to run uninitialized game");
         return;
     }
 
@@ -57,23 +57,32 @@ void Game::Update(double dt)
     m_totalTime += dt;
     ++m_frameCount;
 
-    // ########################
-    // # CHECKING FOR INPUT   #
-    // ########################
+    // input handling
     if (Input::Get().IsKeyDown('W'))
-        m_player->y -= m_player->velocity * static_cast<float>(dt);
+        m_player->pos.y -=
+            m_player->velocity * static_cast<float>(dt);
     if (Input::Get().IsKeyDown('S'))
-        m_player->y += m_player->velocity * static_cast<float>(dt);
+        m_player->pos.y +=
+            m_player->velocity * static_cast<float>(dt);
 
-    // ########################
-    // # RENDERING ENTITIES   #
-    // ########################
-    m_renderer.DrawPlayer(m_player->x, m_player->y, m_player->w, m_player->h);
-    m_renderer.DrawEnemy(m_enemy->x, m_enemy->y, m_enemy->w, m_enemy->h);
+    // enqueue entities for drawing
+    RectUtil playerRect{
+        m_player->pos.x,
+        m_player->pos.y,
+        m_player->size.x,
+        m_player->size.y,
+        m_player->color};
+    m_renderer.DrawEntity(playerRect);
 
-    // ########################
-    // # CHECKING GAME STATE  #
-    // ########################
+    RectUtil enemyRect{
+        m_enemy->pos.x,
+        m_enemy->pos.y,
+        m_enemy->size.x,
+        m_enemy->size.y,
+        m_enemy->color};
+    m_renderer.DrawEntity(enemyRect);
+
+    // update fps timer
     if (m_totalTime < 1.0)
         return;
     m_fps = static_cast<double>(m_frameCount) / m_totalTime;
@@ -85,15 +94,14 @@ void Game::Update(double dt)
 
 void Game::GetEntityList()
 {
-    Logger::Get().LogDebug("[ENTITY LIST]");
-    Logger::Get().LogDebug("_______________________________");
-
     Logger::Get().LogDebug(
-        "[PLAYER ENTITY]  X: " + std::to_string((int)m_player->x) +
-        ", Y: " + std::to_string((int)m_player->y));
+        "Player at (" +
+        std::to_string(static_cast<int>(m_player->pos.x)) + "," +
+        std::to_string(static_cast<int>(m_player->pos.y)) + ")");
     Logger::Get().LogDebug(
-        "[ENEMY ENTITY]  X: " + std::to_string((int)m_enemy->x) +
-        ", Y: " + std::to_string((int)m_enemy->y));
+        "Enemy  at (" +
+        std::to_string(static_cast<int>(m_enemy->pos.x)) + "," +
+        std::to_string(static_cast<int>(m_enemy->pos.y)) + ")");
 }
 
 void Game::Shutdown()
@@ -111,41 +119,28 @@ void Game::InitializeEntities()
     Logger::Get().LogDebug("Initializing game entities");
     Logger::Get().LogDebug("_______________________________");
 
-    // INIT PLAYER ENTITY
-    // #########################
+    // initialize player entity
     Logger::Get().LogDebug("Initializing Player entity");
-    m_player = std::make_unique<Player>(Player{30.0f, (float)m_window->GetHeight() / 2.0f});
+    m_player = std::make_unique<Player>();
+    m_player->pos = {
+        30.0f, static_cast<float>(m_window->GetHeight()) / 2.0f};
+    m_player->size = {20.0f, 100.0f};
+    m_player->color = {0.2f, 0.7f, 0.2f};
 
-    if (!m_player)
-    {
-        Logger::Get().LogError("Failed to initialize Player entity");
-        return;
-    }
-
-    // INIT ENEMY ENTITY
-    // #########################
+    // initialize enemy entity
     Logger::Get().LogDebug("Initializing Enemy entity");
-    m_enemy = std::make_unique<Enemy>(
-        Enemy{(float)m_window->GetWidth() - 60.0f, (float)m_window->GetHeight() / 2.0f});
-
-    if (!m_enemy)
-    {
-        Logger::Get().LogError("Failed to initialize Enemy entity");
-        return;
-    }
+    m_enemy = std::make_unique<Enemy>();
+    m_enemy->pos = {
+        static_cast<float>(m_window->GetWidth()) - 60.0f,
+        static_cast<float>(m_window->GetHeight()) / 2.0f};
+    m_enemy->size = {20.0f, 100.0f};
+    m_enemy->color = {0.8f, 0.2f, 0.2f};
 
     Logger::Get().LogDebug("[ENTITIES INITIALIZATION COMPLETE]");
 }
 
 Game::~Game()
 {
-    // Dont have to call reset here since the dstructor will do that
-    // just for safety bcs why not lol
-
-    Logger::Get().LogDebug("Game destructor called - destroying entities");
+    Logger::Get().LogDebug("Game destructor");
     Shutdown();
-    m_player.reset();
-    Logger::Get().LogDebug("Player destroyed");
-    m_enemy.reset();
-    Logger::Get().LogDebug("Enemy destroyed");
 }

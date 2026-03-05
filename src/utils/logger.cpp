@@ -1,5 +1,4 @@
 #include "logger.h"
-#include <iostream>
 #include <sstream>
 #include <windows.h>
 
@@ -29,7 +28,8 @@ std::string Logger::GetLevelString(LogLevel level) const
 void Logger::Log(LogLevel level, const std::string& message)
 {
     std::wostringstream wss;
-    wss << GetLevelString(level).c_str() << " " << message.c_str() << "\n";
+    wss << GetLevelString(level).c_str() << " " << message.c_str()
+        << "\n";
     OutputDebugStringW(wss.str().c_str());
 }
 
@@ -55,13 +55,15 @@ void Logger::LogError(const std::string& message)
     Log(LogLevel::Error, message);
 }
 
-void Logger::LogEngineState(double fps, int frameCount, double totalTime)
+void Logger::LogEngineState(
+    double fps, int frameCount, double totalTime)
 {
     if (!m_debugEnabled)
         return;
     std::ostringstream oss;
     oss.precision(2);
-    oss << "Engine State - FPS: " << std::fixed << fps << " | Frame: " << frameCount
+    oss << "Engine State - FPS: " << std::fixed << fps
+        << " | Frame: " << frameCount
         << " | Total Time: " << totalTime << "s";
     LogInfo(oss.str());
 }

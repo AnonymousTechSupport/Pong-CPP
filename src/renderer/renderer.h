@@ -1,16 +1,12 @@
 #pragma once
 #include "platform/win32_window.h"
+#include "utils/math_utils.h"
 #include <vector>
 #include <windows.h>
 
 class Renderer
 {
   public:
-    struct Color
-    {
-        float r, g, b;
-        Color(float _r = 1.0f, float _g = 1.0f, float _b = 1.0f) : r(_r), g(_g), b(_b) {}
-    };
     Renderer();
     Renderer(const Renderer&) = delete;
     Renderer& operator=(const Renderer&) = delete;
@@ -20,12 +16,12 @@ class Renderer
     bool Init(Window* window);
     void Render();
 
-    void
-    DrawPlayer(float x, float y, float w, float h, const Color& color = Color(0.2f, 0.7f, 0.2f));
-    void
-    DrawEnemy(float x, float y, float w, float h, const Color& color = Color(0.8f, 0.2f, 0.2f));
+    void DrawEntity(const RectUtil& entity);
 
     void Shutdown();
+
+  private:
+    void DrawRect(const RectUtil& r);
 
   private:
     HDC m_hdc = nullptr;
@@ -36,12 +32,6 @@ class Renderer
     float m_height = 0.0f;
 
   private:
-    // Making a list of entity rectangles to draw each frame, we can batch render them in the
-    // render method
-    struct Rect
-    {
-        float x, y, w, h;
-        Color col;
-    };
-    std::vector<Rect> m_drawEntities;
+    // per-frame list of rectangles to draw
+    std::vector<RectUtil> m_drawEntities;
 };
