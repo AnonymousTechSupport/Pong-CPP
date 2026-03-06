@@ -1,19 +1,30 @@
 #include "game.h"
+#include "game/entity/ball.h"
+#include "game/entity/enemy.h"
+#include "game/entity/player.h"
 #include "utils/input.h"
 #include "utils/logger.h"
 
-bool Game::Init(Window& window)
+int Game::Run()
 {
-    Logger::Get().LogInfo("Initializing Game");
-    Logger::Get().LogInfo("_______________________________");
+    // public entry point used by main().
+    if (!Initialize())
+        return -1;
 
-    m_window = &window;
-    if (!window.IsRunning())
+    RunLoop();
+    return 0;
+}
+
+bool Game::Initialize()
+{
+    Logger::Get().LogInfo("[GAME INITIALIZATION STARTING]");
+
+    if (!m_window.IsRunning())
     {
         Logger::Get().LogError("Window is not running");
         return false;
     }
-    if (!m_renderer.Init(&window))
+    if (!m_renderer.Initialize(&m_window))
     {
         Logger::Get().LogError("Failed to initialize renderer");
         return false;
@@ -22,15 +33,15 @@ bool Game::Init(Window& window)
     m_timer.Start();
 
     InitializeEntities();
-    m_initialised = true;
+    m_initialized = true;
 
     Logger::Get().LogInfo("[GAME INITIALIZATION COMPLETE]");
     return true;
 }
 
-void Game::Run(Window& window)
+void Game::RunLoop()
 {
-    if (!m_initialised)
+    if (!m_initialized)
     {
         Logger::Get().LogWarning(
             "Attempted to run uninitialized game");
@@ -38,109 +49,85 @@ void Game::Run(Window& window)
     }
 
     Logger::Get().LogInfo("[GAME LOOP STARTING]");
-    while (window.IsRunning())
+    while (m_window.IsRunning())
     {
-        if (!window.ProcessMessages())
+        if (!m_window.ProcessMessages())
             break;
 
         Input::Get().Update();
 
-        double dt = m_timer.Tick();
-        Update(dt);
-        m_renderer.Render();
+        double deltaTime = m_timer.Tick();
+        Update(deltaTime);
+        m_renderer.RenderFrame();
     }
     Logger::Get().LogInfo("[GAME LOOP ENDED]");
 }
 
-void Game::Update(double dt)
+void Game::Update(double deltaTime)
 {
-    m_totalTime += dt;
+    m_totalTime += deltaTime;
     ++m_frameCount;
 
-    // input handling
-    if (Input::Get().IsKeyDown('W'))
-        m_player->pos.y -=
-            m_player->velocity * static_cast<float>(dt);
-    if (Input::Get().IsKeyDown('S'))
-        m_player->pos.y +=
-            m_player->velocity * static_cast<float>(dt);
+    // update and enqueue all entities
+    for (auto& e : m_entities)
+    {
+        e->Update(deltaTime);
 
-    // enqueue entities for drawing
-    RectUtil playerRect{
-        m_player->pos.x,
-        m_player->pos.y,
-        m_player->size.x,
-        m_player->size.y,
-        m_player->color};
-    m_renderer.DrawEntity(playerRect);
-
-    RectUtil enemyRect{
-        m_enemy->pos.x,
-        m_enemy->pos.y,
-        m_enemy->size.x,
-        m_enemy->size.y,
-        m_enemy->color};
-    m_renderer.DrawEntity(enemyRect);
+        RenderVariant cmd = e->GetRenderCommand();
+        m_renderer.QueueRenderCommand(cmd);
+    }
 
     // update fps timer
     if (m_totalTime < 1.0)
         return;
     m_fps = static_cast<double>(m_frameCount) / m_totalTime;
     Logger::Get().LogEngineState(m_fps, m_frameCount, m_totalTime);
-    GetEntityList();
+    LogEntityCount();
     m_frameCount = 0;
     m_totalTime = 0.0;
 }
 
-void Game::GetEntityList()
+void Game::LogEntityCount()
 {
+    // simple debug output showing number of entities
     Logger::Get().LogDebug(
-        "Player at (" +
-        std::to_string(static_cast<int>(m_player->pos.x)) + "," +
-        std::to_string(static_cast<int>(m_player->pos.y)) + ")");
-    Logger::Get().LogDebug(
-        "Enemy  at (" +
-        std::to_string(static_cast<int>(m_enemy->pos.x)) + "," +
-        std::to_string(static_cast<int>(m_enemy->pos.y)) + ")");
+        "Entity count: " + std::to_string(m_entities.size()));
 }
 
 void Game::Shutdown()
 {
     Logger::Get().LogInfo("[GAME SHUTTING DOWN]");
     m_renderer.Shutdown();
-    m_initialised = false;
-    Logger::Get().LogInfo("[GAME SHUTDOWN COMPLETE]");
+    m_initialized = false;
 }
 
-Game::Game() : m_initialised(false) {}
+Game::Game() : m_initialized(false) {}
 
 void Game::InitializeEntities()
 {
-    Logger::Get().LogDebug("Initializing game entities");
-    Logger::Get().LogDebug("_______________________________");
+    Logger::Get().LogDebug("[CREATING INITIAL ENTITIES]");
+    m_entities.clear();
 
-    // initialize player entity
-    Logger::Get().LogDebug("Initializing Player entity");
-    m_player = std::make_unique<Player>();
-    m_player->pos = {
-        30.0f, static_cast<float>(m_window->GetHeight()) / 2.0f};
-    m_player->size = {20.0f, 100.0f};
-    m_player->color = {0.2f, 0.7f, 0.2f};
+    // create a player paddle at startup
+    Logger::Get().LogDebug("[CREATING PLAYER ENTITY]");
+    m_entities.emplace_back(std::make_unique<Player>(m_window));
 
-    // initialize enemy entity
-    Logger::Get().LogDebug("Initializing Enemy entity");
-    m_enemy = std::make_unique<Enemy>();
-    m_enemy->pos = {
-        static_cast<float>(m_window->GetWidth()) - 60.0f,
-        static_cast<float>(m_window->GetHeight()) / 2.0f};
-    m_enemy->size = {20.0f, 100.0f};
-    m_enemy->color = {0.8f, 0.2f, 0.2f};
+    // create an enemy paddle at startup
+    Logger::Get().LogDebug("[CREATING ENEMY ENTITY]");
+    m_entities.emplace_back(std::make_unique<Enemy>(m_window));
 
-    Logger::Get().LogDebug("[ENTITIES INITIALIZATION COMPLETE]");
+    // create the ball in the center
+    Logger::Get().LogDebug("[CREATING BALL ENTITY]");
+    m_entities.emplace_back(std::make_unique<Ball>(m_window));
+
+    Logger::Get().LogDebug("[ENTITY CREATION COMPLETE]");
 }
 
 Game::~Game()
 {
-    Logger::Get().LogDebug("Game destructor");
-    Shutdown();
+    Logger::Get().LogDebug("[GAME DESTRUCTOR CALLED]");
+    if (m_initialized)
+    {
+        Shutdown();
+    }
 }

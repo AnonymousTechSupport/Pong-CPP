@@ -1,5 +1,7 @@
 #pragma once
 
+#include <variant>
+
 struct Vector2
 {
     float x;
@@ -15,11 +17,21 @@ struct ColorUtil
     }
 };
 
-struct RectUtil
+struct RenderRectangle
 {
-    float x;
-    float y;
-    float width;
-    float height;
+    Vector2 pos;
+    Vector2 size;
     ColorUtil color;
+    int speed;
 };
+
+struct RenderBall
+{
+    Vector2 center;
+    float radius;
+    ColorUtil color;
+    int speed;
+};
+
+// generic render command type used throughout the engine
+using RenderVariant = std::variant<RenderRectangle, RenderBall>;

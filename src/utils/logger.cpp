@@ -1,4 +1,5 @@
 #include "logger.h"
+#include <iostream>
 #include <sstream>
 #include <windows.h>
 
@@ -25,12 +26,67 @@ std::string Logger::GetLevelString(LogLevel level) const
     }
 }
 
+static bool s_consoleAnsiEnabled = false;
+static void EnsureAnsiEnabled()
+{
+    if (s_consoleAnsiEnabled)
+        return;
+
+#ifdef _WIN32
+    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (hOut != INVALID_HANDLE_VALUE)
+    {
+        DWORD mode = 0;
+        if (GetConsoleMode(hOut, &mode))
+        {
+            mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+            SetConsoleMode(hOut, mode);
+        }
+    }
+#endif
+    s_consoleAnsiEnabled = true;
+}
+
 void Logger::Log(LogLevel level, const std::string& message)
 {
     std::wostringstream wss;
     wss << GetLevelString(level).c_str() << " " << message.c_str()
         << "\n";
     OutputDebugStringW(wss.str().c_str());
+
+    EnsureAnsiEnabled();
+
+    std::string prefix;
+    std::string suffix;
+
+    switch (level)
+    {
+    case LogLevel::Debug:
+        prefix = "\x1b[36m"; // cyan
+        break;
+    case LogLevel::Info:
+        prefix = "\x1b[32m"; // green
+        break;
+    case LogLevel::Warning:
+        prefix = "\x1b[33m"; // yellow
+        break;
+    case LogLevel::Error:
+        prefix = "\x1b[31m"; // red
+        break;
+    default:
+        break;
+    }
+    suffix = "\x1b[0m";
+
+    if (!prefix.empty())
+        std::cout << prefix;
+
+    std::cout << GetLevelString(level) << " " << message;
+
+    if (!suffix.empty())
+        std::cout << suffix;
+
+    std::cout << std::endl;
 }
 
 void Logger::LogDebug(const std::string& message)

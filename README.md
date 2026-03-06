@@ -1,40 +1,54 @@
 # Pong-CPP Engine
 
-This repository contains a simple 2D Pong-style game engine written in C++
-for Windows using the Win32 API and OpenGL for rendering.
+A compact, Windows‑only 2D game engine written in modern C++23.
 
-## Features
+---
 
-- Window management via Win32
-- Simple renderer with orthographic projection (OpenGL 1.1 style)
-- Input handling (keyboard/mouse)
-- Basic game loop and entity management
-- Logging utility with debug toggle
-- Modular code organized into `src` subdirectories
+- **Platform:** Windows (Win32 API + OpenGL 1.1)
+- **Executable:** `bin\main.exe` (built via `build.bat`)
+- **Architecture:** modular `src/` folders: `game`, `renderer`,
+  `platform`, `utils`, etc.
+
+---
+
+## Folder layout
+
+```
+src/
+  main.cpp            # program entry point
+  game/               # game logic and entity system
+  renderer/           # OpenGL rendering wrapper
+  platform/           # Win32 windowing and message pump
+  utils/              # logging, input, timer, etc.
+```
+
+---
 
 ## Building
 
-A batch file `build.bat` compiles the project using `clang++`:
+1. Open a terminal in the workspace root.
+2. Run `build.bat` (requires clang++ on PATH).
+3. Launch `bin\main.exe`; no command‑line arguments needed.
 
-Run the resulting `bin\main.exe` to launch the game. You can enable
-debug logging by calling `Logger::Get().SetDebugEnabled(true);` in `main()`.
+> Tip: enable debug output by calling
+> `Logger::Get().SetDebugEnabled(true);` in `main()` before `game.Run()`.
 
-## Usage
+---
 
-The entry point is `main.cpp`, which creates a `Window` and `Game` object.
-Game state updates and rendering occur within the `Game::Run` loop.
+## Usage & Extension
 
-### Logging
+- **Initialization** is handled internally; `Game::Run()` creates the
+  window, initializes subsystems, and enters the loop.
+- **Main loop:** `Game::RunLoop` processes Win32 messages, updates input,
+  advances the timer, updates all entities, and queues render commands.
+- **Entities:** Implement `GameEntity` (see `entity.h`). New entities are
+  added in `Game::InitializeEntities()`; they may query window dimensions via
+  the `Window` reference provided in their constructors.
 
-The `utils/logger` module provides levelled logging to the debug output.
-Call `Logger::Get().LogInfo()`, `LogWarning()`, `LogError()`, or `LogDebug()`.
-Debug messages are controlled via `SetDebugEnabled()`.
+---
 
-### Entities
+## Tools & Logging
 
-Player and enemy paddles are represented by simple structs and drawn by
-`Renderer`.  Coordinates and sizes are configured in `Game::InitializeEntities()`.
-
-## License
-
-This project is provided without warranty under the MIT license.
+The logger outputs colourised messages to the console (green/info, yellow/
+warning, red/error, cyan/debug). Level control is available at runtime via the `Logger` instance. Input handling currently supports keyboard and
+mouse via a simple Win32 message forwarder.

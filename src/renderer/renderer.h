@@ -1,6 +1,7 @@
 #pragma once
 #include "platform/win32_window.h"
 #include "utils/math_utils.h"
+#include <variant>
 #include <vector>
 #include <windows.h>
 
@@ -13,25 +14,29 @@ class Renderer
 
     ~Renderer();
 
-    bool Init(Window* window);
-    void Render();
+    bool Initialize(Window* window);
+    void RenderFrame();
 
-    void DrawEntity(const RectUtil& entity);
+    void QueueRenderRectangle(const RenderRectangle& rect);
+    void QueueRenderCommand(const RenderVariant& cmd);
 
     void Shutdown();
 
   private:
-    void DrawRect(const RectUtil& r);
+    void DrawRectangle(const RenderRectangle& r);
+    void DrawCircle(const RenderBall& ball);
 
   private:
-    HDC m_hdc = nullptr;
-    HGLRC m_glrc = nullptr;
+    HDC m_deviceContext = nullptr; // handle to device context
+    HGLRC m_openglContext =
+        nullptr; // handle to OpenGL rendering context
     Window* m_window = nullptr;
 
     float m_width = 0.0f;
     float m_height = 0.0f;
 
   private:
-    // per-frame list of rectangles to draw
-    std::vector<RectUtil> m_drawEntities;
+    // per-frame queue of rectangles to render
+    using RenderVariant = std::variant<RenderRectangle, RenderBall>;
+    std::vector<RenderVariant> m_renderQueue;
 };

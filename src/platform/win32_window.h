@@ -2,7 +2,8 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
-LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+LRESULT CALLBACK
+WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 class Window
 {
@@ -20,8 +21,27 @@ class Window
 
     HWND GetHwnd() const;
 
-    int GetWidth() const { return 1280; }
-    int GetHeight() const { return 720; }
+    int GetWidth() const
+    {
+        if (m_hWindow)
+        {
+            RECT rect;
+            if (GetClientRect(m_hWindow, &rect))
+                return rect.right - rect.left;
+        }
+        return 0;
+    }
+
+    int GetHeight() const
+    {
+        if (m_hWindow)
+        {
+            RECT rect;
+            if (GetClientRect(m_hWindow, &rect))
+                return rect.bottom - rect.top;
+        }
+        return 0;
+    }
 
   private:
     HINSTANCE m_instance;

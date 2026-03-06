@@ -21,11 +21,13 @@ class Input
     void Update();
 
     // Feed Win32 messages (call from WindowProc)
-    void ProcessWin32Message(UINT message, WPARAM wParam, LPARAM lParam);
+    void
+    ProcessWin32Message(UINT message, WPARAM wParam, LPARAM lParam);
 
     // Queries
     bool IsKeyDown(int vk) const;
-    bool IsKeyPressed(int vk) const; // true only on the frame it was pressed
+    bool IsKeyPressed(
+        int vk) const; // true only on the frame it was pressed
 
     POINT GetMousePos() const;
     void GetMousePos(int& x, int& y) const; // convenience wrapper
@@ -45,8 +47,6 @@ class Input
     std::array<bool, 3> m_mouseButtons;
     POINT m_mousePos{0, 0};
 };
-
-// Inline implementation to make Input header-only (avoids separate .o linking issues)
 
 inline Input& Input::Get()
 {
@@ -75,7 +75,8 @@ inline void Input::Clear()
     m_mouseButtons.fill(false);
 }
 
-inline void Input::ProcessWin32Message(UINT message, WPARAM wParam, LPARAM lParam)
+inline void
+Input::ProcessWin32Message(UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {
@@ -85,7 +86,9 @@ inline void Input::ProcessWin32Message(UINT message, WPARAM wParam, LPARAM lPara
         unsigned char vk = static_cast<unsigned char>(wParam & 0xFF);
         m_keys.set(vk);
         // debug log
-        Logger::Get().LogDebug(std::string("Input: KEYDOWN vk=") + std::to_string((unsigned)vk));
+        Logger::Get().LogDebug(
+            std::string("Input: KEYDOWN vk=") +
+            std::to_string((unsigned)vk));
         break;
     }
     case WM_KEYUP:
@@ -93,34 +96,43 @@ inline void Input::ProcessWin32Message(UINT message, WPARAM wParam, LPARAM lPara
     {
         unsigned char vk = static_cast<unsigned char>(wParam & 0xFF);
         m_keys.reset(vk);
-        Logger::Get().LogDebug(std::string("Input: KEYUP vk=") + std::to_string((unsigned)vk));
+        Logger::Get().LogDebug(
+            std::string("Input: KEYUP vk=") +
+            std::to_string((unsigned)vk));
         break;
     }
     case WM_MOUSEMOVE:
     {
         int x = static_cast<int>(static_cast<short>(lParam & 0xFFFF));
-        int y = static_cast<int>(static_cast<short>((lParam >> 16) & 0xFFFF));
+        int y = static_cast<int>(
+            static_cast<short>((lParam >> 16) & 0xFFFF));
         m_mousePos.x = x;
         m_mousePos.y = y;
         break;
     }
     case WM_LBUTTONDOWN:
-        m_mouseButtons[static_cast<int>(Input::MouseButton::Left)] = true;
+        m_mouseButtons[static_cast<int>(Input::MouseButton::Left)] =
+            true;
         break;
     case WM_LBUTTONUP:
-        m_mouseButtons[static_cast<int>(Input::MouseButton::Left)] = false;
+        m_mouseButtons[static_cast<int>(Input::MouseButton::Left)] =
+            false;
         break;
     case WM_RBUTTONDOWN:
-        m_mouseButtons[static_cast<int>(Input::MouseButton::Right)] = true;
+        m_mouseButtons[static_cast<int>(Input::MouseButton::Right)] =
+            true;
         break;
     case WM_RBUTTONUP:
-        m_mouseButtons[static_cast<int>(Input::MouseButton::Right)] = false;
+        m_mouseButtons[static_cast<int>(Input::MouseButton::Right)] =
+            false;
         break;
     case WM_MBUTTONDOWN:
-        m_mouseButtons[static_cast<int>(Input::MouseButton::Middle)] = true;
+        m_mouseButtons[static_cast<int>(Input::MouseButton::Middle)] =
+            true;
         break;
     case WM_MBUTTONUP:
-        m_mouseButtons[static_cast<int>(Input::MouseButton::Middle)] = false;
+        m_mouseButtons[static_cast<int>(Input::MouseButton::Middle)] =
+            false;
         break;
     case WM_ACTIVATE:
         if (LOWORD(wParam) == WA_INACTIVE)

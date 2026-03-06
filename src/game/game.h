@@ -1,10 +1,11 @@
 #pragma once
+#include "game/entity/entity.h"
 #include "renderer.h"
-#include "utils/math_utils.h"
 #include "utils/timer.h"
 #include "win32_window.h"
 
 #include <memory>
+#include <vector>
 
 class Game
 {
@@ -15,42 +16,31 @@ class Game
 
     ~Game();
 
-    bool Init(class Window& window);
+    bool Initialize(); // create internal window
 
-    void Run(class Window& window);
-    void Update(double dt);
+    void RunLoop();
+    int Run(); // initialize + loop
+    void Update(double deltaTime);
+
+  private:
     void Shutdown();
 
   public:
-    void GetEntityList(); // Just for debugging at this point
+    void LogEntityCount(); // debug helper
 
   private:
     void InitializeEntities();
 
   private:
+    Window m_window;
     Renderer m_renderer;
     Timer m_timer;
-    Window* m_window = nullptr;
-    bool m_initialised = false;
+    bool m_initialized =
+        false; // true after successful initialization
 
   private:
-    struct Player
-    {
-        Vector2 pos{};
-        Vector2 size{};
-        ColorUtil color{};
-        int velocity = 400; // pixels per second
-    };
-    std::unique_ptr<Player> m_player;
-
-    struct Enemy
-    {
-        Vector2 pos{};
-        Vector2 size{};
-        ColorUtil color{};
-        int velocity = 400; // pixels per second
-    };
-    std::unique_ptr<Enemy> m_enemy;
+    // generic container for all game entities
+    std::vector<std::unique_ptr<GameEntity>> m_entities;
 
   private:
     double m_totalTime = 0.0;
