@@ -4,6 +4,7 @@
 #include "game/entity/player.h"
 #include "utils/input.h"
 #include "utils/logger.h"
+#include <SDL3/SDL.h>
 
 int Game::Run()
 {
@@ -17,16 +18,22 @@ int Game::Run()
 
 bool Game::Initialize()
 {
-    Logger::Get().LogInfo("[GAME INITIALIZATION STARTING]");
-
-    if (!m_window.IsRunning())
+    LOG_INFO("[GAME INITIALIZATION STARTING]");
+    // Initialize SDL here and create the window
+    if (!SDL_Init(SDL_INIT_VIDEO))
     {
-        Logger::Get().LogError("Window is not running");
+        LOG_ERROR(std::string("SDL_Init failed: ") + SDL_GetError());
         return false;
     }
-    if (!m_renderer.Initialize(&m_window))
+
+    if (!m_window.Create())
     {
-        Logger::Get().LogError("Failed to initialize renderer");
+        LOG_ERROR("Failed to create window");
+        return false;
+    }
+    if (!m_renderer.Initialize())
+    {
+        LOG_ERROR("Failed to initialize renderer");
         return false;
     }
 
@@ -35,7 +42,7 @@ bool Game::Initialize()
     InitializeEntities();
     m_initialized = true;
 
-    Logger::Get().LogInfo("[GAME INITIALIZATION COMPLETE]");
+    LOG_INFO("[GAME INITIALIZATION COMPLETE]");
     return true;
 }
 
@@ -43,24 +50,23 @@ void Game::RunLoop()
 {
     if (!m_initialized)
     {
-        Logger::Get().LogWarning(
-            "Attempted to run uninitialized game");
+        LOG_WARNING("Attempted to run uninitialized game");
         return;
     }
 
-    Logger::Get().LogInfo("[GAME LOOP STARTING]");
-    while (m_window.IsRunning())
+    LOG_INFO("[GAME LOOP STARTING]");
+    while (window::IsRunning(&m_window))
     {
-        if (!m_window.ProcessMessages())
+        if (!window::PollEvents(&m_window))
             break;
 
-        Input::Get().Update();
+        input::Update();
 
         double deltaTime = m_timer.Tick();
         Update(deltaTime);
         m_renderer.RenderFrame();
     }
-    Logger::Get().LogInfo("[GAME LOOP ENDED]");
+    LOG_INFO("[GAME LOOP ENDED]");
 }
 
 void Game::Update(double deltaTime)
@@ -81,7 +87,7 @@ void Game::Update(double deltaTime)
     if (m_totalTime < 1.0)
         return;
     m_fps = static_cast<double>(m_frameCount) / m_totalTime;
-    Logger::Get().LogEngineState(m_fps, m_frameCount, m_totalTime);
+    LOG_ENGINE_STATE(m_fps, m_frameCount, m_totalTime);
     LogEntityCount();
     m_frameCount = 0;
     m_totalTime = 0.0;
@@ -90,44 +96,50 @@ void Game::Update(double deltaTime)
 void Game::LogEntityCount()
 {
     // simple debug output showing number of entities
-    Logger::Get().LogDebug(
-        "Entity count: " + std::to_string(m_entities.size()));
+    LOG_DEBUG("Entity count: " + std::to_string(m_entities.size()));
 }
 
 void Game::Shutdown()
 {
-    Logger::Get().LogInfo("[GAME SHUTTING DOWN]");
+    LOG_INFO("[GAME SHUTTING DOWN]");
     m_renderer.Shutdown();
+    m_window.Shutdown();
     m_initialized = false;
 }
 
-Game::Game() : m_initialized(false) {}
+Game::Game() : m_renderer(&m_window), m_initialized(false) {}
 
 void Game::InitializeEntities()
 {
-    Logger::Get().LogDebug("[CREATING INITIAL ENTITIES]");
+    LOG_DEBUG("[CREATING INITIAL ENTITIES]");
     m_entities.clear();
 
     // create a player paddle at startup
-    Logger::Get().LogDebug("[CREATING PLAYER ENTITY]");
+    LOG_DEBUG("[CREATING PLAYER ENTITY]");
     m_entities.emplace_back(std::make_unique<Player>(m_window));
 
     // create an enemy paddle at startup
-    Logger::Get().LogDebug("[CREATING ENEMY ENTITY]");
+    LOG_DEBUG("[CREATING ENEMY ENTITY]");
     m_entities.emplace_back(std::make_unique<Enemy>(m_window));
 
     // create the ball in the center
-    Logger::Get().LogDebug("[CREATING BALL ENTITY]");
+    LOG_DEBUG("[CREATING BALL ENTITY]");
     m_entities.emplace_back(std::make_unique<Ball>(m_window));
 
-    Logger::Get().LogDebug("[ENTITY CREATION COMPLETE]");
+    LOG_DEBUG("[ENTITY CREATION COMPLETE]");
 }
 
 Game::~Game()
 {
-    Logger::Get().LogDebug("[GAME DESTRUCTOR CALLED]");
+    LOG_DEBUG("[GAME DESTRUCTOR CALLED]");
     if (m_initialized)
     {
         Shutdown();
+    }
+    // Only call SDL_Quit() if SDL was initialized earlier
+    if (SDL_WasInit(0) != 0)
+    {
+        SDL_Quit();
+        LOG_INFO("SDL_Quit() called from Game destructor");
     }
 }

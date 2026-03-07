@@ -47,10 +47,11 @@ static void EnsureAnsiEnabled()
     s_consoleAnsiEnabled = true;
 }
 
-void Logger::Log(LogLevel level, const std::string& message)
+void Logger::Log(LogLevel level, const std::string_view& message)
 {
+    std::string msg(message);
     std::wostringstream wss;
-    wss << GetLevelString(level).c_str() << " " << message.c_str()
+    wss << GetLevelString(level).c_str() << " " << msg.c_str()
         << "\n";
     OutputDebugStringW(wss.str().c_str());
 
@@ -89,24 +90,24 @@ void Logger::Log(LogLevel level, const std::string& message)
     std::cout << std::endl;
 }
 
-void Logger::LogDebug(const std::string& message)
+void Logger::LogDebug(const std::string_view& message)
 {
     if (!m_debugEnabled)
         return;
     Log(LogLevel::Debug, message);
 }
 
-void Logger::LogInfo(const std::string& message)
+void Logger::LogInfo(const std::string_view& message)
 {
     Log(LogLevel::Info, message);
 }
 
-void Logger::LogWarning(const std::string& message)
+void Logger::LogWarning(const std::string_view& message)
 {
     Log(LogLevel::Warning, message);
 }
 
-void Logger::LogError(const std::string& message)
+void Logger::LogError(const std::string_view& message)
 {
     Log(LogLevel::Error, message);
 }

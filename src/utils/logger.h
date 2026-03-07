@@ -20,13 +20,20 @@ class Logger
     void SetDebugEnabled(bool enabled) { m_debugEnabled = enabled; }
     bool IsDebugEnabled() const { return m_debugEnabled; }
 
-    void Log(LogLevel level, const std::string& message);
-    void LogDebug(const std::string& message);
-    void LogInfo(const std::string& message);
-    void LogWarning(const std::string& message);
-    void LogError(const std::string& message);
+    void Log(LogLevel level, const std::string_view& message);
+    void LogDebug(const std::string_view& message);
+    void LogInfo(const std::string_view& message);
+    void LogWarning(const std::string_view& message);
+    void LogError(const std::string_view& message);
 
     void LogEngineState(double fps, int frameCount, double totalTime);
+
+#define LOG_DEBUG(msg) Logger::Get().LogDebug(msg)
+#define LOG_INFO(msg) Logger::Get().LogInfo(msg)
+#define LOG_WARNING(msg) Logger::Get().LogWarning(msg)
+#define LOG_ERROR(msg) Logger::Get().LogError(msg)
+#define LOG_ENGINE_STATE(fps, frameCount, totalTime)                 \
+    Logger::Get().LogEngineState(fps, frameCount, totalTime)
 
   private:
     Logger() = default;

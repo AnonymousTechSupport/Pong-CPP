@@ -1,6 +1,6 @@
 #pragma once
 #include "entity.h"
-#include "platform/win32_window.h"
+#include "platform/sdl_window.h"
 
 struct Enemy : public GameEntity
 {

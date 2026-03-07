@@ -1,100 +1,65 @@
 #include "renderer.h"
+#include "logger.h"
 #include "math_utils.h"
+#if defined(_WIN32) || defined(_WIN64)
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+#endif
 #include <GL/gl.h>
-#include <cmath>
 
-Renderer::Renderer() = default;
+Renderer::Renderer(Window* window) : m_window(window) {}
 
-bool Renderer::Initialize(Window* window)
+bool Renderer::Initialize()
 {
-    m_window = window;
     if (!m_window)
     {
-        MessageBoxW(
-            nullptr,
-            L"Invalid window pointer",
-            L"Error",
-            MB_OK | MB_ICONERROR);
         return false;
     }
 
-    m_deviceContext = GetDC(m_window->GetHwnd());
-    if (!m_deviceContext)
+    SDL_Window* sdlWindow = m_window->GetSDLWindow();
+    if (!sdlWindow)
     {
-        MessageBoxW(
-            nullptr,
-            L"Failed to get device context",
-            L"Error",
-            MB_OK | MB_ICONERROR);
+        LOG_ERROR(
+            "Renderer::Initialize - invalid SDL window pointer");
         return false;
     }
 
-    PIXELFORMATDESCRIPTOR pfd = {};
-    pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
-    pfd.nVersion = 1;
-    pfd.dwFlags =
-        PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
-    pfd.iPixelType = PFD_TYPE_RGBA;
-    pfd.cColorBits = 32;
-    pfd.cDepthBits = 24;
-    pfd.iLayerType = PFD_MAIN_PLANE;
+    // Request a compatibility/profile that supports fixed-function
+    // (glBegin)
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+    SDL_GL_SetAttribute(
+        SDL_GL_CONTEXT_PROFILE_MASK,
+        SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
 
-    int pixelFormat = ChoosePixelFormat(m_deviceContext, &pfd);
-    if (pixelFormat == 0)
+    m_glContext = SDL_GL_CreateContext(sdlWindow);
+    if (!m_glContext)
     {
-        MessageBoxW(
-            nullptr,
-            L"Failed to choose pixel format",
-            L"Error",
-            MB_OK | MB_ICONERROR);
+        std::string err(SDL_GetError());
+        LOG_ERROR(
+            std::string("Failed to create SDL GL context: ") + err);
         return false;
     }
 
-    if (!SetPixelFormat(m_deviceContext, pixelFormat, &pfd))
+    if (!SDL_GL_MakeCurrent(sdlWindow, m_glContext))
     {
-        MessageBoxW(
-            nullptr,
-            L"Failed to set pixel format",
-            L"Error",
-            MB_OK | MB_ICONERROR);
+        std::string err(SDL_GetError());
+        LOG_ERROR(
+            std::string("Failed to make SDL GL context current: ") +
+            err);
         return false;
     }
 
-    m_openglContext = wglCreateContext(m_deviceContext);
-    if (!m_openglContext)
-    {
-        MessageBoxW(
-            nullptr,
-            L"Failed to create OpenGL context",
-            L"Error",
-            MB_OK | MB_ICONERROR);
-        return false;
-    }
-
-    if (!wglMakeCurrent(m_deviceContext, m_openglContext))
-    {
-        MessageBoxW(
-            nullptr,
-            L"Failed to make OpenGL context current",
-            L"Error",
-            MB_OK | MB_ICONERROR);
-        return false;
-    }
-
-    // Get the window dimensions
-    RECT rect{};
-    if (GetClientRect(m_window->GetHwnd(), &rect) == 0)
-    {
-        MessageBoxW(
-            nullptr,
-            L"Failed to get window dimensions",
-            L"Error",
-            MB_OK | MB_ICONERROR);
-        return false;
-    }
-
-    m_width = rect.right - rect.left;
-    m_height = rect.bottom - rect.top;
+    // Get the window dimensions from SDL
+    int width = 0;
+    int height = 0;
+    SDL_GetWindowSize(sdlWindow, &width, &height);
+    m_width = static_cast<float>(width);
+    m_height = static_cast<float>(height);
 
     return true;
 }
@@ -130,7 +95,9 @@ void Renderer::RenderFrame()
     // ready for next frame
     m_renderQueue.clear();
 
-    SwapBuffers(m_deviceContext);
+    SDL_Window* sdlWindow = m_window->GetSDLWindow();
+    if (sdlWindow)
+        SDL_GL_SwapWindow(sdlWindow);
 }
 
 // #################################
@@ -160,36 +127,38 @@ void Renderer::DrawRectangle(const RenderRectangle& r)
 
 void Renderer::DrawCircle(const RenderBall& ball)
 {
-    const int segments = 32;
+    const int segments = 48;
+    const float cx = ball.center.x;
+    const float cy = ball.center.y;
+    const float r = ball.radius;
+    const float twoPi = 6.28318530717958647692f; // 2 * PI
+
     glColor3f(ball.color.r, ball.color.g, ball.color.b);
     glBegin(GL_TRIANGLE_FAN);
-    glVertex2f(ball.center.x, ball.center.y);
+    // center vertex
+    glVertex2f(cx, cy);
+
+    // outer vertices
     for (int i = 0; i <= segments; ++i)
     {
-        float theta = 2.0f * 3.1415926f * float(i) / float(segments);
-        float x = ball.radius * cosf(theta);
-        float y = ball.radius * sinf(theta);
-        glVertex2f(ball.center.x + x, ball.center.y + y);
+        float t =
+            static_cast<float>(i) / static_cast<float>(segments);
+        float theta = t * twoPi;
+        float x = cx + r * cosf(theta);
+        float y = cy + r * sinf(theta);
+        glVertex2f(x, y);
     }
+
     glEnd();
 }
 
 void Renderer::Shutdown()
 {
-    if (m_openglContext)
+    if (m_glContext)
     {
-        wglMakeCurrent(nullptr, nullptr);
-        wglDeleteContext(m_openglContext);
-        m_openglContext = nullptr;
-    }
-
-    if (m_deviceContext)
-    {
-        if (m_window)
-            ReleaseDC(m_window->GetHwnd(), m_deviceContext);
-        else
-            ReleaseDC(WindowFromDC(m_deviceContext), m_deviceContext);
-        m_deviceContext = nullptr;
+        SDL_GL_MakeCurrent(nullptr, nullptr);
+        SDL_GL_DestroyContext(m_glContext);
+        m_glContext = nullptr;
     }
     m_window = nullptr;
 }

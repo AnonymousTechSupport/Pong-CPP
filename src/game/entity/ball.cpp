@@ -1,10 +1,10 @@
 #include "ball.h"
-#include "platform/win32_window.h"
+#include "platform/sdl_window.h"
 
 Ball::Ball(const Window& window)
 {
-    windowWidth = window.GetWidth();
-    windowHeight = window.GetHeight();
+    windowWidth = window::Width(&window);
+    windowHeight = window::Height(&window);
     pos = {
         static_cast<float>(windowWidth) / 2.0f,
         static_cast<float>(windowHeight) / 2.0f};

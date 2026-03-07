@@ -1,8 +1,8 @@
 #pragma once
 #include "game/entity/entity.h"
-#include "renderer.h"
+#include "platform/sdl_window.h"
+#include "renderer/renderer.h"
 #include "utils/timer.h"
-#include "win32_window.h"
 
 #include <memory>
 #include <vector>

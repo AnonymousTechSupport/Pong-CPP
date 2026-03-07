@@ -1,20 +1,19 @@
 #pragma once
-#include "platform/win32_window.h"
+#include "platform/sdl_window.h"
 #include "utils/math_utils.h"
 #include <variant>
 #include <vector>
-#include <windows.h>
 
 class Renderer
 {
   public:
-    Renderer();
+    Renderer(Window* window);
     Renderer(const Renderer&) = delete;
     Renderer& operator=(const Renderer&) = delete;
 
     ~Renderer();
 
-    bool Initialize(Window* window);
+    bool Initialize();
     void RenderFrame();
 
     void QueueRenderRectangle(const RenderRectangle& rect);
@@ -27,16 +26,16 @@ class Renderer
     void DrawCircle(const RenderBall& ball);
 
   private:
-    HDC m_deviceContext = nullptr; // handle to device context
-    HGLRC m_openglContext =
-        nullptr; // handle to OpenGL rendering context
+    // SDL-managed OpenGL context
+    SDL_GLContext m_glContext = nullptr;
+
     Window* m_window = nullptr;
 
     float m_width = 0.0f;
     float m_height = 0.0f;
 
   private:
-    // per-frame queue of rectangles to render
-    using RenderVariant = std::variant<RenderRectangle, RenderBall>;
+    // per-frame queue of render commands (use the global
+    // RenderVariant)
     std::vector<RenderVariant> m_renderQueue;
 };

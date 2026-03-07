@@ -7,3 +7,4 @@ c++
 -Isrc/platform
 -Isrc/renderer
 -Isrc/utils
+-Ithird_party/SDL3-3.4.2/include
