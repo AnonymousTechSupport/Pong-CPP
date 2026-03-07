@@ -1,54 +1,31 @@
-# Pong-CPP Engine
+## Pong Engine in C++
 
-A compact, Windows‑only 2D game engine written in modern C++23.
+A small game engine using C++, SDL3 and OpenGL. Premake is provided for project generation.
 
----
+Requirements
+- C++ toolchain (MSVC on Windows, or gcc/clang on Linux/macOS)
+- SDL3 (bundled at `third_party/SDL3-3.4.2` for convenience)
 
-- **Platform:** Windows (Win32 API + OpenGL 1.1)
-- **Executable:** `bin\main.exe` (built via `build.bat`)
-- **Architecture:** modular `src/` folders: `game`, `renderer`,
-  `platform`, `utils`, etc.
+Quick build
+- Windows: run `build.bat` from the repository root. Output: `bin\\main.exe`.
+- Linux / macOS: run `make -f build/Makefile` from the repository root. Output: `bin/main`.
 
----
+Run
+- Execute the built binary: `bin\main.exe` on Windows or `./bin/main` on Linux/macOS.
 
-## Folder layout
+Project layout
+- `src/` — engine source code
+  - `src/main.cpp` — program entry, startup and main loop orchestration
+  - `src/platform/` — platform abstraction and windowing backends
+  - `src/renderer/` — rendering code and public renderer interface
+  - `src/utils/` — small utilities and helpers
 
-```
-src/
-  main.cpp            # program entry point
-  game/               # game logic and entity system
-  renderer/           # OpenGL rendering wrapper
-  platform/           # Win32 windowing and message pump
-  utils/              # logging, input, timer, etc.
-```
+- `third_party/SDL3-3.4.2/` — bundled SDL3 headers and prebuilt libraries for supported architectures; used to avoid external dependency setup during development
 
----
+- `build/` — build makefiles and intermediate build scripts (`build/Makefile`, `build/Engine.make`)
+- `build.bat` — Windows convenience script to build the project
+- `premake5.lua` — premake project generator (optional; use if you prefer IDE project files)
 
-## Building
-
-1. Open a terminal in the workspace root.
-2. Run `build.bat` (requires clang++ on PATH).
-3. Launch `bin\main.exe`; no command‑line arguments needed.
-
-> Tip: enable debug output by calling
-> `Logger::Get().SetDebugEnabled(true);` in `main()` before `game.Run()`.
-
----
-
-## Usage & Extension
-
-- **Initialization** is handled internally; `Game::Run()` creates the
-  window, initializes subsystems, and enters the loop.
-- **Main loop:** `Game::RunLoop` processes Win32 messages, updates input,
-  advances the timer, updates all entities, and queues render commands.
-- **Entities:** Implement `GameEntity` (see `entity.h`). New entities are
-  added in `Game::InitializeEntities()`; they may query window dimensions via
-  the `Window` reference provided in their constructors.
-
----
-
-## Tools & Logging
-
-The logger outputs colourised messages to the console (green/info, yellow/
-warning, red/error, cyan/debug). Level control is available at runtime via the `Logger` instance. Input handling currently supports keyboard and
-mouse via a simple Win32 message forwarder.
+- `bin/` — build outputs and runtime DLLs (e.g. `main.exe`, `SDL3.dll`)
+- `compile_flags.txt` — recommended compiler flags used during development
+- `.clang-format` — formatting rules for consistent code style
