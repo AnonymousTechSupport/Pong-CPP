@@ -1,118 +1,141 @@
+// ------------------------------------------------------------------------------
+// ---------------------------- RENDERER IMPLEMENTATION ---------------------------
+// ------------------------------------------------------------------------------
+
 #include "renderer.h"
-#include "logger.h"
-#include "math_utils.h"
+#include "utils/logger.h"
+#include <SDL3/SDL.h>
+#include <cmath>
+#include <type_traits>
+#include <variant>
+
 #if defined(_WIN32) || defined(_WIN64)
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
 #include <windows.h>
 #endif
-#include <GL/gl.h>
 
-Renderer::Renderer(Window* window) : m_window(window) {}
+#include <GL/gl.h>
+#include <string>
+
+Renderer::Renderer(IWindow* window) : m_window(window)
+{
+}
+
+Renderer::~Renderer()
+{
+    Shutdown();
+}
 
 bool Renderer::Initialize()
 {
     if (!m_window)
     {
+        LOG_ERROR("Renderer::Initialize — no window provided");
         return false;
     }
 
-    SDL_Window* sdlWindow = m_window->GetSDLWindow();
+    // Retrieve the native SDL_Window* through the platform-agnostic
+    // interface. The renderer is the only place that ever casts this
+    // pointer.
+    SDL_Window* sdlWindow = static_cast<SDL_Window*>(m_window->GetNativeWindow());
     if (!sdlWindow)
     {
-        LOG_ERROR(
-            "Renderer::Initialize - invalid SDL window pointer");
+        LOG_ERROR("Renderer::Initialize — GetNativeWindow returned null");
         return false;
     }
 
-    // Request a compatibility/profile that supports fixed-function
-    // (glBegin)
+    // Request an OpenGL 2.1 compatibility profile
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
-    SDL_GL_SetAttribute(
-        SDL_GL_CONTEXT_PROFILE_MASK,
-        SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
 
     m_glContext = SDL_GL_CreateContext(sdlWindow);
     if (!m_glContext)
     {
-        std::string err(SDL_GetError());
-        LOG_ERROR(
-            std::string("Failed to create SDL GL context: ") + err);
+        LOG_ERROR(std::string("Failed to create GL context: ") + SDL_GetError());
         return false;
     }
 
     if (!SDL_GL_MakeCurrent(sdlWindow, m_glContext))
     {
-        std::string err(SDL_GetError());
-        LOG_ERROR(
-            std::string("Failed to make SDL GL context current: ") +
-            err);
+        LOG_ERROR(std::string("Failed to make GL context current: ") + SDL_GetError());
         return false;
     }
 
-    // Get the window dimensions from SDL
-    int width = 0;
-    int height = 0;
-    SDL_GetWindowSize(sdlWindow, &width, &height);
-    m_width = static_cast<float>(width);
-    m_height = static_cast<float>(height);
+    m_width = static_cast<float>(m_window->GetWidth());
+    m_height = static_cast<float>(m_window->GetHeight());
 
     return true;
 }
 
 void Renderer::RenderFrame()
 {
-    glViewport(0, 0, m_width, m_height);
+    glViewport(0, 0, static_cast<GLsizei>(m_width), static_cast<GLsizei>(m_height));
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // set up an orthographic projection in pixel
-    // coordinates
+    // Orthographic projection mapped to pixel coordinates (top-left
+    // origin).
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho(0.0, m_width, m_height, 0.0, -1.0, 1.0);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    // draw queued commands
     for (const auto& cmd : m_renderQueue)
     {
-        if (auto* rect = std::get_if<RenderRectangle>(&cmd))
-        {
-            DrawRectangle(*rect);
-        }
-        else if (auto* ball = std::get_if<RenderBall>(&cmd))
-        {
-            DrawCircle(*ball);
-        }
+        std::visit(
+            [this](auto&& arg)
+            {
+                using T = std::decay_t<decltype(arg)>;
+                if constexpr (std::is_same_v<T, RenderRectangle>)
+                    DrawRectangle(arg);
+                else if constexpr (std::is_same_v<T, RenderBall>)
+                    DrawCircle(arg);
+            },
+            cmd);
     }
 
-    // Once the frame clears, we clear the render queue
-    // ready for next frame
     m_renderQueue.clear();
 
-    SDL_Window* sdlWindow = m_window->GetSDLWindow();
+    SDL_Window* sdlWindow = static_cast<SDL_Window*>(m_window->GetNativeWindow());
     if (sdlWindow)
         SDL_GL_SwapWindow(sdlWindow);
 }
 
-// #################################
-// # DRAW FUNCTIONS FOR ENTITIES   #
-// #################################
+// --- Getters / Setters
+// ---------------------
+
+void Renderer::Shutdown()
+{
+    if (m_glContext)
+    {
+        SDL_GL_MakeCurrent(nullptr, nullptr);
+        SDL_GL_DestroyContext(m_glContext);
+        m_glContext = nullptr;
+    }
+    m_window = nullptr;
+}
+
+// ---------------------
 
 void Renderer::QueueRenderRectangle(const RenderRectangle& rect)
 {
     m_renderQueue.emplace_back(rect);
 }
 
-void Renderer::QueueRenderCommand(const RenderVariant& cmd)
+void Renderer::QueueRenderBall(const RenderBall& cmd)
 {
     m_renderQueue.emplace_back(cmd);
 }
+
+// ------------------------------------------------------------------------------
+// -------------------------- DRAW HELPERS / ACCESSORS --------------------------
+// ------------------------------------------------------------------------------
 
 void Renderer::DrawRectangle(const RenderRectangle& r)
 {
@@ -127,43 +150,19 @@ void Renderer::DrawRectangle(const RenderRectangle& r)
 
 void Renderer::DrawCircle(const RenderBall& ball)
 {
-    const int segments = 48;
-    const float cx = ball.center.x;
-    const float cy = ball.center.y;
-    const float r = ball.radius;
-    const float twoPi = 6.28318530717958647692f; // 2 * PI
+    constexpr int segments = 48;
+    constexpr float twoPi = 6.28318530717958647692f;
 
     glColor3f(ball.color.r, ball.color.g, ball.color.b);
     glBegin(GL_TRIANGLE_FAN);
-    // center vertex
-    glVertex2f(cx, cy);
-
-    // outer vertices
+    glVertex2f(ball.center.x, ball.center.y);
     for (int i = 0; i <= segments; ++i)
     {
-        float t =
-            static_cast<float>(i) / static_cast<float>(segments);
-        float theta = t * twoPi;
-        float x = cx + r * cosf(theta);
-        float y = cy + r * sinf(theta);
-        glVertex2f(x, y);
+        float theta = (static_cast<float>(i) / static_cast<float>(segments)) * twoPi;
+        glVertex2f(ball.center.x + ball.radius * std::cosf(theta),
+                   ball.center.y + ball.radius * std::sinf(theta));
     }
-
     glEnd();
 }
 
-void Renderer::Shutdown()
-{
-    if (m_glContext)
-    {
-        SDL_GL_MakeCurrent(nullptr, nullptr);
-        SDL_GL_DestroyContext(m_glContext);
-        m_glContext = nullptr;
-    }
-    m_window = nullptr;
-}
-
-Renderer::~Renderer()
-{
-    Shutdown();
-}
+// ---------------------

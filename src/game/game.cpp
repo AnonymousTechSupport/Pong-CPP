@@ -1,14 +1,38 @@
 #include "game.h"
-#include "game/entity/ball.h"
-#include "game/entity/enemy.h"
-#include "game/entity/player.h"
-#include "utils/input.h"
+#include "platform/iwindow.h"
+#include "renderer/irenderer.h"
+#include "utils/iinput.h"
 #include "utils/logger.h"
 #include <SDL3/SDL.h>
+#include <string>
+
+// ------------------------------------------------------------------------------
+// ------------------------------ GAME IMPLEMENTATION ------------------------------
+// ------------------------------------------------------------------------------
+
+// --- Implementations
+// --------------------
+
+Game::Game() : m_renderer(&m_window)
+{
+}
+
+// --- Destructor -------------------------------------
+Game::~Game()
+{
+    LOG_DEBUG("[GAME DESTRUCTOR CALLED]");
+    if (m_initialized)
+        Shutdown();
+
+    if (SDL_WasInit(0) != 0)
+    {
+        SDL_Quit();
+        LOG_INFO("SDL_Quit called");
+    }
+}
 
 int Game::Run()
 {
-    // public entry point used by main().
     if (!Initialize())
         return -1;
 
@@ -18,31 +42,53 @@ int Game::Run()
 
 bool Game::Initialize()
 {
-    LOG_INFO("[GAME INITIALIZATION STARTING]");
-    // Initialize SDL here and create the window
+    LOG_INFO("[GAME INITIALIZING]");
+
     if (!SDL_Init(SDL_INIT_VIDEO))
     {
-        LOG_ERROR(std::string("SDL_Init failed: ") + SDL_GetError());
+        LOG_ERROR(std::string("SDL_Init failed: ") + std::string(SDL_GetError()));
         return false;
     }
 
-    if (!m_window.Create())
+    // Use the interface pointer so this code is backend-agnostic.
+    IWindow* window = &m_window;
+    if (!window->Create())
     {
         LOG_ERROR("Failed to create window");
         return false;
     }
-    if (!m_renderer.Initialize())
+
+    IRenderer* renderer = &m_renderer;
+    if (!renderer->Initialize())
     {
         LOG_ERROR("Failed to initialize renderer");
         return false;
     }
 
-    m_timer.Start();
+    // Create a test entity
+    {
+        Entity* e = m_entityManager.CreateEntity();
+        TransformComponent t;
+        t.position = {400.0f, 300.0f};
+        t.scale = {50.0f, 50.0f};
+        m_entityManager.AddTransform(e, t);
 
-    InitializeEntities();
+        RenderComponent r;
+        r.shape = ShapeType::Ball;
+        r.color = {0.2f, 0.7f, 0.3f};
+        m_entityManager.AddRender(e, r);
+
+        // Make the demo entity controllable via input
+        InputComponent ic;
+        ic.isControllable = true;
+        ic.speed = 360.0f;
+        m_entityManager.AddInput(e, ic);
+    }
+
+    m_timer.Start();
     m_initialized = true;
 
-    LOG_INFO("[GAME INITIALIZATION COMPLETE]");
+    LOG_INFO("[GAME INITIALIZED]");
     return true;
 }
 
@@ -50,21 +96,31 @@ void Game::RunLoop()
 {
     if (!m_initialized)
     {
-        LOG_WARNING("Attempted to run uninitialized game");
+        LOG_WARNING("RunLoop called before Initialize");
         return;
     }
 
+    IWindow* window = &m_window;
+    IRenderer* renderer = &m_renderer;
+
     LOG_INFO("[GAME LOOP STARTING]");
-    while (window::IsRunning(&m_window))
+    while (window->IsRunning())
     {
-        if (!window::PollEvents(&m_window))
+        if (!window->ProcessEvent())
             break;
 
         input::Update();
 
         double deltaTime = m_timer.Tick();
+        // Update entities
+        m_entityManager.UpdateAll(static_cast<float>(deltaTime));
+
         Update(deltaTime);
-        m_renderer.RenderFrame();
+
+        // Queue entity renders
+        m_entityManager.DrawAll(renderer);
+
+        renderer->RenderFrame();
     }
     LOG_INFO("[GAME LOOP ENDED]");
 }
@@ -72,74 +128,28 @@ void Game::RunLoop()
 void Game::Update(double deltaTime)
 {
     m_totalTime += deltaTime;
-    ++m_frameCount;
+    m_frameCount += 1;
 
-    // update and enqueue all entities
-    for (auto& e : m_entities)
-    {
-        e->Update(deltaTime);
-
-        RenderVariant cmd = e->GetRenderCommand();
-        m_renderer.QueueRenderCommand(cmd);
-    }
-
-    // update fps timer
+    // Log FPS once per second.
     if (m_totalTime < 1.0)
         return;
+
     m_fps = static_cast<double>(m_frameCount) / m_totalTime;
-    LOG_ENGINE_STATE(m_fps, m_frameCount, m_totalTime);
-    LogEntityCount();
     m_frameCount = 0;
     m_totalTime = 0.0;
-}
 
-void Game::LogEntityCount()
-{
-    // simple debug output showing number of entities
-    LOG_DEBUG("Entity count: " + std::to_string(m_entities.size()));
+    LOG_ENGINE_STATE(m_fps, m_frameCount, m_totalTime);
 }
 
 void Game::Shutdown()
 {
     LOG_INFO("[GAME SHUTTING DOWN]");
-    m_renderer.Shutdown();
-    m_window.Shutdown();
+
+    IRenderer* renderer = &m_renderer;
+    renderer->Shutdown();
+
+    IWindow* window = &m_window;
+    window->Shutdown();
+
     m_initialized = false;
-}
-
-Game::Game() : m_renderer(&m_window), m_initialized(false) {}
-
-void Game::InitializeEntities()
-{
-    LOG_DEBUG("[CREATING INITIAL ENTITIES]");
-    m_entities.clear();
-
-    // create a player paddle at startup
-    LOG_DEBUG("[CREATING PLAYER ENTITY]");
-    m_entities.emplace_back(std::make_unique<Player>(m_window));
-
-    // create an enemy paddle at startup
-    LOG_DEBUG("[CREATING ENEMY ENTITY]");
-    m_entities.emplace_back(std::make_unique<Enemy>(m_window));
-
-    // create the ball in the center
-    LOG_DEBUG("[CREATING BALL ENTITY]");
-    m_entities.emplace_back(std::make_unique<Ball>(m_window));
-
-    LOG_DEBUG("[ENTITY CREATION COMPLETE]");
-}
-
-Game::~Game()
-{
-    LOG_DEBUG("[GAME DESTRUCTOR CALLED]");
-    if (m_initialized)
-    {
-        Shutdown();
-    }
-    // Only call SDL_Quit() if SDL was initialized earlier
-    if (SDL_WasInit(0) != 0)
-    {
-        SDL_Quit();
-        LOG_INFO("SDL_Quit() called from Game destructor");
-    }
 }

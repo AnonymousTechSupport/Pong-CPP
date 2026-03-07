@@ -3,11 +3,22 @@
 #include <sstream>
 #include <windows.h>
 
+// ------------------------------------------------------------------------------
+// ---------------------------- LOGGER IMPLEMENTATION ----------------------------
+// ------------------------------------------------------------------------------
+
+// ------------------------------------------------------------------------------
+// ------------------------------- LIFECYCLE -----------------------------------
+// ------------------------------------------------------------------------------
 Logger& Logger::Get()
 {
     static Logger instance;
     return instance;
 }
+
+// ------------------------------------------------------------------------------
+// ---------------------------- GETTERS / SETTERS -------------------------------
+// ------------------------------------------------------------------------------
 
 std::string Logger::GetLevelString(LogLevel level) const
 {
@@ -51,8 +62,7 @@ void Logger::Log(LogLevel level, const std::string_view& message)
 {
     std::string msg(message);
     std::wostringstream wss;
-    wss << GetLevelString(level).c_str() << " " << msg.c_str()
-        << "\n";
+    wss << GetLevelString(level).c_str() << " " << msg.c_str() << "\n";
     OutputDebugStringW(wss.str().c_str());
 
     EnsureAnsiEnabled();
@@ -112,15 +122,15 @@ void Logger::LogError(const std::string_view& message)
     Log(LogLevel::Error, message);
 }
 
-void Logger::LogEngineState(
-    double fps, int frameCount, double totalTime)
+void Logger::LogEngineState(double fps, int frameCount, double totalTime)
 {
     if (!m_debugEnabled)
         return;
     std::ostringstream oss;
     oss.precision(2);
-    oss << "Engine State - FPS: " << std::fixed << fps
-        << " | Frame: " << frameCount
+    oss << "Engine State - FPS: " << std::fixed << fps << " | Frame: " << frameCount
         << " | Total Time: " << totalTime << "s";
     LogInfo(oss.str());
 }
+
+// ------------------

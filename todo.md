@@ -1,6 +1,7 @@
 ## Roadmap
 
 -   ensure that the entity system is seamless, easy to add new things ect
+-   look at creating a hot-code reload system so i dont have to constantly reload the .exe
 
 ## Completed Items
 -   Refactor window platform into the latest SDL version, getting rid of winapi abstractions ect

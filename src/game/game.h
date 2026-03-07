@@ -1,11 +1,11 @@
 #pragma once
-#include "game/entity/entity.h"
+#include "game/entities/entity_handler.h"
 #include "platform/sdl_window.h"
 #include "renderer/renderer.h"
 #include "utils/timer.h"
 
-#include <memory>
-#include <vector>
+// --- Game (top-level coordinator)
+// ---------------------------------------
 
 class Game
 {
@@ -13,36 +13,23 @@ class Game
     Game();
     Game(const Game&) = delete;
     Game& operator=(const Game&) = delete;
-
     ~Game();
 
-    bool Initialize(); // create internal window
+    int Run();
 
+  private:
+    bool Initialize();
     void RunLoop();
-    int Run(); // initialize + loop
     void Update(double deltaTime);
-
-  private:
     void Shutdown();
-
-  public:
-    void LogEntityCount(); // debug helper
-
-  private:
-    void InitializeEntities();
 
   private:
     Window m_window;
     Renderer m_renderer;
     Timer m_timer;
-    bool m_initialized =
-        false; // true after successful initialization
+    EntityManager m_entityManager;
 
-  private:
-    // generic container for all game entities
-    std::vector<std::unique_ptr<GameEntity>> m_entities;
-
-  private:
+    bool m_initialized = false;
     double m_totalTime = 0.0;
     int m_frameCount = 0;
     double m_fps = 0.0;

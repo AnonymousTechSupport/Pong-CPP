@@ -1,87 +1,51 @@
 #pragma once
-
-#include "utils/math_utils.h"
+#include "utils/iinput.h"
 #include <SDL3/SDL.h>
 #include <array>
 #include <bitset>
+#include <string>
 
-class Input
+// ------------------------------------------------------------------------------
+// ------------------------ INPUT (SDL-BACKED IMPLEMENTATION) --------------------
+// ------------------------------------------------------------------------------
+
+// ------------------------------------------------------------------------------
+// ------------------------------ GETTERS / SETTERS ------------------------------
+// ------------------------------------------------------------------------------
+class Input : public IInput
 {
   public:
-    enum class MouseButton : int
-    {
-        Left,
-        Right,
-        Middle,
-    };
-
-  public:
     static Input& Get();
-    void Update();
 
+    void Update() override;
+    bool IsKeyDown(int key) const override;
+    bool IsKeyPressed(int key) const override;
+    bool IsKeyReleased(int key) const override;
+    bool IsMouseButtonDown(MouseButton button) const override;
+    Vector2 GetMousePosition() const override;
+    void SetMousePosition(int x, int y) override;
+    void Clear() override;
+
+    // SDL-only helper: forward SDL events into the input system.
     void ProcessSDLInput(const SDL_Event& event);
-
-    bool isKeyDown(int key) const;
-    bool isMouseButtonDown(MouseButton button) const;
-
-    bool isKeyPressed(int key) const;
-    bool isKeyReleased(int key) const;
-
-    void SetMousePosition(int x, int y);
-    Vector2 GetMousePosition() const;
-
-    void Clear();
 
   private:
     Input();
-    std::bitset<512> m_keys;
-    std::bitset<512> m_prevKeys;
-    std::array<bool, 3> m_mouseButtons;
 
-    int m_mouseX;
-    int m_mouseY;
+    // Resolve an input integer (ASCII letter or raw scancode index) to an SDL_Scancode.
+    // Accepts 'A'..'Z' or 'a'..'z' and numeric scancode indices.
+    SDL_Scancode ResolveScancode(int key) const;
+    // Resolve to a bitset index, or -1 if invalid.
+    int ResolveKeyIndex(int key) const;
+    // Return a short human-readable name for a scancode.
+    std::string ScancodeName(SDL_Scancode sc) const;
+
+    static constexpr size_t kKeyCount = 512;
+    std::bitset<kKeyCount> m_keys;
+    std::bitset<kKeyCount> m_prevKeys;
+    std::array<bool, 3> m_mouseButtons;
+    int m_mouseX = 0;
+    int m_mouseY = 0;
 };
 
-namespace input
-{
-static inline bool IsKeyDown(int key) noexcept
-{
-    return Input::Get().isKeyDown(key);
-}
-
-static inline bool IsKeyPressed(int key) noexcept
-{
-    return Input::Get().isKeyPressed(key);
-}
-
-static inline bool IsKeyReleased(int key) noexcept
-{
-    return Input::Get().isKeyReleased(key);
-}
-
-static inline bool
-IsMouseButtonDown(Input::MouseButton button) noexcept
-{
-    return Input::Get().isMouseButtonDown(button);
-}
-
-static inline Vector2 GetMousePosition() noexcept
-{
-    return Input::Get().GetMousePosition();
-}
-
-static inline void SetMousePosition(int x, int y) noexcept
-{
-    Input::Get().SetMousePosition(x, y);
-}
-
-static inline void Clear() noexcept
-{
-    Input::Get().Clear();
-}
-
-static inline void Update() noexcept
-{
-    Input::Get().Update();
-}
-} // namespace input
+// ---------------------

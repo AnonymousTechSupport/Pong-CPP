@@ -1,22 +1,35 @@
 BasedOnStyle: LLVM
 Language: Cpp
 
+# Indentation
 IndentWidth: 4
-ColumnLimit: 70
+ContinuationIndentWidth: 4
 
-AllowShortFunctionsOnASingleLine: Inline
+# Soft column limit; prefer breaking parameters rather than packing
+ColumnLimit: 100
 
+# Keep functions concise on single line only when trivial
+AllowShortFunctionsOnASingleLine: None
+
+# Style
 BreakBeforeBraces: Allman
 
-AlignAfterOpenBracket: AlwaysBreak
+# Parameters/arguments: do not bin-pack, and align under the opening
 BinPackArguments: false
 BinPackParameters: false
-AllowAllArgumentsOnNextLine: true
-AllowAllParametersOfDeclarationOnNextLine: true
+AlignAfterOpenBracket: Align
+AllowAllArgumentsOnNextLine: false
+AllowAllParametersOfDeclarationOnNextLine: false
 
-
+# Pointer style
 PointerAlignment: Left
 DerivePointerAlignment: false
 
+# Misc
 SortIncludes: true
 SpaceBeforeParens: ControlStatements
+
+# Make it more likely that parameters are broken onto separate lines
+PenaltyExcessCharacter: 1000
+
+# Spacing inside parentheses / brackets - default (no extra spaces)

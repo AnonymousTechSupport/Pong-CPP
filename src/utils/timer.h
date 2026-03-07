@@ -1,18 +1,27 @@
-// Simple high-resolution timer using QueryPerformanceCounter
 #pragma once
-#include <windows.h>
+#include <chrono>
+
+// --- Timer
+// --------------------------------------------
 
 class Timer
 {
   public:
-    Timer();
+    Timer() = default;
+
+    // Record the start time.
     void Start();
-    // Tick updates internal time and returns delta seconds since last tick
+
+    // Returns elapsed seconds since the last Tick() (or Start()).
     double Tick();
+
+    // Returns the most recent delta without advancing the clock.
     double GetDelta() const;
 
   private:
-    LARGE_INTEGER m_freq;
-    LARGE_INTEGER m_prev;
-    double m_delta;
+    using Clock = std::chrono::high_resolution_clock;
+    using TimePoint = std::chrono::time_point<Clock>;
+
+    TimePoint m_prev;
+    double m_delta = 0.0;
 };

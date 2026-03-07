@@ -1,67 +1,43 @@
+// --- SDL Window implementation
+// ------------------------------------------
+
 #pragma once
+#pragma once
+#include "platform/iwindow.h"
 #include <SDL3/SDL.h>
 
-// allows us to not include windows.h header
+// Windows-only: forward-declare HWND without pulling in windows.h.
 #if defined(_WIN32) || defined(_WIN64)
 typedef struct HWND__* HWND;
 #else
 using HWND = void*;
 #endif
 
-class Window
+class Window : public IWindow
 {
   public:
     Window();
-    bool Create();
     Window(const Window&) = delete;
     Window& operator=(const Window&) = delete;
-    ~Window();
+    ~Window() override;
 
-    bool ProcessEvent();
-    void Shutdown();
-    bool isRunning() const;
+    bool Create() override;
+    void Shutdown() override;
+    bool ProcessEvent() override;
 
-  public:
+    // --- Getters / Setters
+    // ---------------------
+    bool IsRunning() const override;
+    int GetWidth() const override;
+    int GetHeight() const override;
+
+    void* GetNativeWindow() const override;
+
     HWND GetWindowHandle() const;
-    SDL_Window* GetSDLWindow() const;
-    int GetWidth() const;
-    int GetHeight() const;
 
   private:
     SDL_Window* m_window = nullptr;
     bool m_running = true;
 };
 
-namespace window
-{
-static inline bool IsRunning(const Window* w) noexcept
-{
-    return w && w->isRunning();
-}
-
-static inline HWND Handle(const Window* w) noexcept
-{
-    return w ? w->GetWindowHandle() : nullptr;
-}
-
-static inline int Width(const Window* w) noexcept
-{
-    return w ? w->GetWidth() : 0;
-}
-
-static inline int Height(const Window* w) noexcept
-{
-    return w ? w->GetHeight() : 0;
-}
-
-static inline bool PollEvents(Window* w) noexcept
-{
-    return w ? w->ProcessEvent() : false;
-}
-
-static inline void Shutdown(Window* w) noexcept
-{
-    if (w)
-        w->Shutdown();
-}
-} // namespace window
+// ---------------------
