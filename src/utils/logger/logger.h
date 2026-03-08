@@ -1,50 +1,53 @@
 #pragma once
-#include <string>
+#include <spdlog/spdlog.h>
 
-enum class LogLevel
-{
-    Debug,
-    Info,
-    Warning,
-    Error
-};
-
-class Logger
+class EngineLogger
 {
   public:
-    Logger(const Logger&) = delete;
-    Logger& operator=(const Logger&) = delete;
+    EngineLogger(const EngineLogger&) = delete;
+    EngineLogger& operator=(const EngineLogger&) = delete;
 
-    static Logger& Get();
+    static EngineLogger& Get();
 
-    void SetDebugEnabled(bool enabled)
+    void SetDebugEnabled(bool enabled);
+    bool IsDebugEnabled() const;
+
+    template <typename... Args> void Info(spdlog::format_string_t<Args...> fmt, Args&&... args)
     {
-        m_debugEnabled = enabled;
+        spdlog::info(fmt, std::forward<Args>(args)...);
     }
-    bool IsDebugEnabled() const
+
+    template <typename... Args> void Debug(spdlog::format_string_t<Args...> fmt, Args&&... args)
     {
-        return m_debugEnabled;
+        if (IsDebugEnabled())
+        {
+            spdlog::debug(fmt, std::forward<Args>(args)...);
+        }
     }
 
-    void Log(LogLevel level, const std::string_view& message);
-    void LogDebug(const std::string_view& message);
-    void LogInfo(const std::string_view& message);
-    void LogWarning(const std::string_view& message);
-    void LogError(const std::string_view& message);
+    template <typename... Args> void Warn(spdlog::format_string_t<Args...> fmt, Args&&... args)
+    {
+        spdlog::warn(fmt, std::forward<Args>(args)...);
+    }
 
-    void LogEngineState(double fps, int frameCount, double totalTime);
+    template <typename... Args> void Error(spdlog::format_string_t<Args...> fmt, Args&&... args)
+    {
+        spdlog::error(fmt, std::forward<Args>(args)...);
+    }
 
   private:
-    Logger() = default;
-
-    std::string GetLevelString(LogLevel level) const;
+    EngineLogger() = default;
 
     bool m_debugEnabled = false;
 };
 
-#define LOG_DEBUG(msg) Logger::Get().LogDebug(msg)
-#define LOG_INFO(msg) Logger::Get().LogInfo(msg)
-#define LOG_WARNING(msg) Logger::Get().LogWarning(msg)
-#define LOG_ERROR(msg) Logger::Get().LogError(msg)
+#define LOG_INFO(...) EngineLogger::Get().Info(__VA_ARGS__)
+#define LOG_DEBUG(...) EngineLogger::Get().Debug(__VA_ARGS__)
+#define LOG_WARNING(...) EngineLogger::Get().Warn(__VA_ARGS__)
+#define LOG_ERROR(...) EngineLogger::Get().Error(__VA_ARGS__)
+
 #define LOG_ENGINE_STATE(fps, frameCount, totalTime)                                               \
-    Logger::Get().LogEngineState(fps, frameCount, totalTime)
+    EngineLogger::Get().Info("Engine State - FPS: {:.2f} | Frame: {} | Total Time: {:.2f}s",       \
+                             fps,                                                                  \
+                             frameCount,                                                           \
+                             totalTime)

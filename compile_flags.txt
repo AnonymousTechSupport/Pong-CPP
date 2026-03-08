@@ -1,10 +1,12 @@
 -x
 c++
 -std=c++23
+-DSPDLOG_HEADER_ONLY
 -I.
 -Isrc
 -Isrc/game
 -Isrc/platform
 -Isrc/renderer
 -Isrc/utils
+-Ithird_party
 -Ithird_party/SDL3-3.4.2/include

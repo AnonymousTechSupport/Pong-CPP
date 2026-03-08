@@ -13,7 +13,6 @@
 #endif
 
 #include <GL/gl.h>
-#include <string>
 
 OpenGLRenderer::OpenGLRenderer(IWindow* window) : m_window(window)
 {
@@ -48,13 +47,13 @@ bool OpenGLRenderer::Initialize()
     m_glContext = SDL_GL_CreateContext(sdlWindow);
     if (!m_glContext)
     {
-        LOG_ERROR(std::string("Failed to create GL context: ") + SDL_GetError());
+        LOG_ERROR("Failed to create GL context: {}", SDL_GetError());
         return false;
     }
 
     if (!SDL_GL_MakeCurrent(sdlWindow, m_glContext))
     {
-        LOG_ERROR(std::string("Failed to make GL context current: ") + SDL_GetError());
+        LOG_ERROR("Failed to make GL context current: {}", SDL_GetError());
         return false;
     }
 

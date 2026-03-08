@@ -2,7 +2,6 @@
 #include "utils/input/input.h"
 #include "utils/logger/logger.h"
 #include <SDL3/SDL.h>
-#include <string>
 
 // --- Game implementation
 // ---------------------------------------------------------
@@ -20,7 +19,6 @@ Game::~Game()
     if (SDL_WasInit(0) != 0)
     {
         SDL_Quit();
-        LOG_INFO("SDL_Quit called");
     }
 }
 
@@ -39,7 +37,7 @@ bool Game::Initialize()
 
     if (!SDL_Init(SDL_INIT_VIDEO))
     {
-        LOG_ERROR(std::string("SDL_Init failed: ") + std::string(SDL_GetError()));
+        LOG_ERROR("SDL_Init failed: {}", SDL_GetError());
         return false;
     }
 
@@ -67,6 +65,10 @@ bool Game::Initialize()
         r.shape = ShapeType::Ball;
         r.color = {0.2f, 0.7f, 0.3f};
         m_entityManager.AddRender(e, r);
+
+        InputComponent i;
+        i.isControllable = false;
+        m_entityManager.AddInput(e, i);
     }
 
     m_timer.Start();

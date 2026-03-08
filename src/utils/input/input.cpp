@@ -88,8 +88,7 @@ void Input::ProcessSDLInput(const SDL_Event& event)
         SDL_Scancode scancode = event.key.scancode;
         if (static_cast<size_t>(scancode) < m_keys.size())
             m_keys.set(static_cast<size_t>(scancode));
-        LOG_DEBUG("-> KEYDOWN CODE: " + std::to_string(static_cast<int>(scancode)) + " (" +
-                  ScancodeName(scancode) + ")");
+        LOG_DEBUG("-> KEYDOWN CODE: {} ({})", static_cast<int>(scancode), ScancodeName(scancode));
         break;
     }
 
@@ -98,16 +97,14 @@ void Input::ProcessSDLInput(const SDL_Event& event)
         SDL_Scancode scancode = event.key.scancode;
         if (static_cast<size_t>(scancode) < m_keys.size())
             m_keys.reset(static_cast<size_t>(scancode));
-        LOG_DEBUG("-> KEYUP   CODE: " + std::to_string(static_cast<int>(scancode)) + " (" +
-                  ScancodeName(scancode) + ")");
+        LOG_DEBUG("-> KEYUP   CODE: {} ({})", static_cast<int>(scancode), ScancodeName(scancode));
         break;
     }
 
     case SDL_EVENT_MOUSE_MOTION:
         m_mouseX = static_cast<int>(event.motion.x);
         m_mouseY = static_cast<int>(event.motion.y);
-        LOG_DEBUG("-> MOUSE MOTION: (" + std::to_string(m_mouseX) + ", " +
-                  std::to_string(m_mouseY) + ")");
+        LOG_DEBUG("-> MOUSE MOTION: ({}, {})", m_mouseX, m_mouseY);
         break;
 
     case SDL_EVENT_MOUSE_BUTTON_DOWN:
@@ -117,7 +114,7 @@ void Input::ProcessSDLInput(const SDL_Event& event)
             m_mouseButtons[static_cast<int>(MouseButton::Right)] = true;
         else if (event.button.button == SDL_BUTTON_MIDDLE)
             m_mouseButtons[static_cast<int>(MouseButton::Middle)] = true;
-        LOG_DEBUG("-> MOUSE BUTTON DOWN: " + std::to_string(event.button.button));
+        LOG_DEBUG("-> MOUSE BUTTON DOWN: {}", event.button.button);
         break;
 
     case SDL_EVENT_MOUSE_BUTTON_UP:

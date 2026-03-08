@@ -6,6 +6,7 @@
 
 void EntityManager::UpdateAll(float dt)
 {
+    LOG_DEBUG("Updating entities");
     for (auto& entity : m_entities)
     {
         if (!entity->input || !entity->transform)
@@ -23,10 +24,6 @@ void EntityManager::UpdateAll(float dt)
             t->position.y -= ic->speed * dt;
         if (input::IsKeyDown('S'))
             t->position.y += ic->speed * dt;
-        if (input::IsKeyDown('A'))
-            t->position.x -= ic->speed * dt;
-        if (input::IsKeyDown('D'))
-            t->position.x += ic->speed * dt;
     }
 }
 

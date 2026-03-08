@@ -8,7 +8,7 @@ int main()
     Game game;
 
     // Set to false to suppress verbose per-frame debug output.
-    Logger::Get().SetDebugEnabled(true);
+    EngineLogger::Get().SetDebugEnabled(true);
 
     return game.Run();
 }

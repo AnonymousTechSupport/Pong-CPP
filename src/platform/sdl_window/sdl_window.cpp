@@ -1,7 +1,6 @@
 #include "sdl_window.h"
 #include "utils/input/input.h"
 #include "utils/logger/logger.h"
-#include <string>
 
 // --- SDL Window implementation
 // ---------------------------------------------------------
@@ -34,7 +33,7 @@ bool SDLWindow::Create()
 
     if (!m_window)
     {
-        LOG_ERROR(std::string("Failed to create SDL window: ") + SDL_GetError());
+        LOG_ERROR("Failed to create SDL window: {}", SDL_GetError());
         m_running = false;
         return false;
     }

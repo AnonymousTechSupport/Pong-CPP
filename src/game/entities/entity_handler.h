@@ -1,5 +1,6 @@
 #pragma once
 #include "renderer/interface/irenderer.h"
+#include "utils/logger/logger.h"
 #include "utils/math/math_utils.h"
 #include <memory>
 #include <vector>
@@ -56,8 +57,10 @@ class EntityManager
     Entity* CreateEntity()
     {
         auto entity = std::make_unique<Entity>();
+        LOG_DEBUG("Creating new entity with ID: {}", entity->id);
         entity->id = m_nextEntityId++;
         m_entities.push_back(std::move(entity));
+
         return m_entities.back().get();
     }
 
@@ -67,6 +70,11 @@ class EntityManager
     {
         if (!e)
             return;
+        LOG_DEBUG(
+            "Adding transform component to entity with ID: {}, position x: {}, position y: {}",
+            e->id,
+            static_cast<int>(t.position.x),
+            static_cast<int>(t.position.y));
         e->transform = std::make_unique<TransformComponent>(t);
     }
 
@@ -81,6 +89,8 @@ class EntityManager
     {
         if (!e)
             return;
+        LOG_DEBUG("Removing transform component from entity with ID: {}", e->id);
+
         e->transform.reset();
     }
 
@@ -88,6 +98,10 @@ class EntityManager
     {
         if (!e)
             return;
+        LOG_DEBUG("Adding render component to entity with ID: {}, render type: {}",
+                  e->id,
+                  r.shape == ShapeType::Rectangle ? "Rectangle" : "Ball");
+
         e->render = std::make_unique<RenderComponent>(r);
     }
 
@@ -102,6 +116,7 @@ class EntityManager
     {
         if (!e)
             return;
+        LOG_DEBUG("Removing render component from entity with ID: {}", e->id);
         e->render.reset();
     }
 
@@ -109,6 +124,9 @@ class EntityManager
     {
         if (!e)
             return;
+        LOG_DEBUG("Adding input component to entity with ID: {}, is controllable: {}",
+                  e->id,
+                  i.isControllable);
         e->input = std::make_unique<InputComponent>(i);
     }
 
@@ -123,6 +141,7 @@ class EntityManager
     {
         if (!e)
             return;
+        LOG_DEBUG("Removing input component from entity with ID: {}", e->id);
         e->input.reset();
     }
 

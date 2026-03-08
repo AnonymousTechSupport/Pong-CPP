@@ -34,9 +34,12 @@ project "Engine"
         "src/utils/logger",
         "src/utils/timer",
         "src/utils/math",
-        "third_party/SDL3-3.4.2/include"
+        "third_party/SDL3-3.4.2/include",
+        "third_party"
     }
-    
+
+    defines { "SPDLOG_HEADER_ONLY=" }
+
     libdirs {
         "third_party/SDL3-3.4.2/lib/x64"
     }
