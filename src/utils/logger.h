@@ -3,6 +3,7 @@
 
 // --- Logger
 // -------------------------------------------------
+
 enum class LogLevel
 {
     Debug,
@@ -19,16 +20,8 @@ class Logger
 
     static Logger& Get();
 
-    // --- Getters / Setters
-    // ------------------
-    void SetDebugEnabled(bool enabled)
-    {
-        m_debugEnabled = enabled;
-    }
-    bool IsDebugEnabled() const
-    {
-        return m_debugEnabled;
-    }
+    void SetDebugEnabled(bool enabled);
+    bool IsDebugEnabled() const;
 
     void Log(LogLevel level, const std::string_view& message);
     void LogDebug(const std::string_view& message);
@@ -46,12 +39,10 @@ class Logger
     bool m_debugEnabled = false;
 };
 
-// Convenience macros — defined at file scope, not inside the class.
+// Convenience macros
 #define LOG_DEBUG(msg) Logger::Get().LogDebug(msg)
 #define LOG_INFO(msg) Logger::Get().LogInfo(msg)
 #define LOG_WARNING(msg) Logger::Get().LogWarning(msg)
 #define LOG_ERROR(msg) Logger::Get().LogError(msg)
 #define LOG_ENGINE_STATE(fps, frameCount, totalTime)                                               \
     Logger::Get().LogEngineState(fps, frameCount, totalTime)
-
-// ------------------

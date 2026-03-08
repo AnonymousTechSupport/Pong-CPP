@@ -1,7 +1,6 @@
 #pragma once
 #include "platform/iwindow.h"
 #include "renderer/irenderer.h"
-#include "utils/math_utils.h"
 #include <SDL3/SDL.h>
 #include <vector>
 

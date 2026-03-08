@@ -2,7 +2,6 @@
 // ------------------------------------------
 
 #pragma once
-#pragma once
 #include "platform/iwindow.h"
 #include <SDL3/SDL.h>
 
@@ -25,8 +24,6 @@ class Window : public IWindow
     void Shutdown() override;
     bool ProcessEvent() override;
 
-    // --- Getters / Setters
-    // ---------------------
     bool IsRunning() const override;
     int GetWidth() const override;
     int GetHeight() const override;
@@ -39,5 +36,3 @@ class Window : public IWindow
     SDL_Window* m_window = nullptr;
     bool m_running = true;
 };
-
-// ---------------------

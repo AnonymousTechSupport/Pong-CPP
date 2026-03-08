@@ -1,13 +1,10 @@
 #include "input.h"
-#include "SDL3/SDL_events.h"
-#include "SDL3/SDL_scancode.h"
 #include "utils/logger.h"
 #include <cctype>
 #include <string>
 
-// ------------------------------------------------------------------------------
-// ------------------------------ INPUT IMPLEMENTATION ---------------------------
-// ------------------------------------------------------------------------------
+// --- Input implementation
+// ---------------------------------------------------------
 
 // IInput::Get() is defined here so that callers including only
 // iinput.h get the concrete Input singleton without seeing SDL types.
@@ -86,22 +83,27 @@ void Input::Clear()
 
 void Input::ProcessSDLInput(const SDL_Event& event)
 {
-    SDL_Scancode scancode = event.key.scancode;
     switch (event.type)
     {
     case SDL_EVENT_KEY_DOWN:
+    {
+        SDL_Scancode scancode = event.key.scancode;
         if (static_cast<size_t>(scancode) < m_keys.size())
             m_keys.set(static_cast<size_t>(scancode));
         LOG_DEBUG("-> KEYDOWN CODE: " + std::to_string(static_cast<int>(scancode)) + " (" +
                   ScancodeName(scancode) + ")");
         break;
+    }
 
     case SDL_EVENT_KEY_UP:
+    {
+        SDL_Scancode scancode = event.key.scancode;
         if (static_cast<size_t>(scancode) < m_keys.size())
             m_keys.reset(static_cast<size_t>(scancode));
         LOG_DEBUG("-> KEYUP   CODE: " + std::to_string(static_cast<int>(scancode)) + " (" +
                   ScancodeName(scancode) + ")");
         break;
+    }
 
     case SDL_EVENT_MOUSE_MOTION:
         m_mouseX = static_cast<int>(event.motion.x);
@@ -137,10 +139,6 @@ void Input::ProcessSDLInput(const SDL_Event& event)
         break;
     }
 }
-
-// ------------------------------------------------------------------------------
-// ---------------------------- GETTERS / SETTERS -------------------------------
-// ------------------------------------------------------------------------------
 
 bool Input::IsKeyDown(int key) const
 {
@@ -181,5 +179,3 @@ void Input::SetMousePosition(int x, int y)
     m_mouseX = x;
     m_mouseY = y;
 }
-
-// ------------------

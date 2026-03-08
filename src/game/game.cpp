@@ -1,23 +1,15 @@
 #include "game.h"
-#include "platform/iwindow.h"
-#include "renderer/irenderer.h"
-#include "utils/iinput.h"
 #include "utils/logger.h"
 #include <SDL3/SDL.h>
 #include <string>
 
-// ------------------------------------------------------------------------------
-// ------------------------------ GAME IMPLEMENTATION ------------------------------
-// ------------------------------------------------------------------------------
-
-// --- Implementations
-// --------------------
+// --- Game implementation
+// ---------------------------------------------------------
 
 Game::Game() : m_renderer(&m_window)
 {
 }
 
-// --- Destructor -------------------------------------
 Game::~Game()
 {
     LOG_DEBUG("[GAME DESTRUCTOR CALLED]");
@@ -50,16 +42,13 @@ bool Game::Initialize()
         return false;
     }
 
-    // Use the interface pointer so this code is backend-agnostic.
-    IWindow* window = &m_window;
-    if (!window->Create())
+    if (!m_window.Create())
     {
         LOG_ERROR("Failed to create window");
         return false;
     }
 
-    IRenderer* renderer = &m_renderer;
-    if (!renderer->Initialize())
+    if (!m_renderer.Initialize())
     {
         LOG_ERROR("Failed to initialize renderer");
         return false;
@@ -78,7 +67,6 @@ bool Game::Initialize()
         r.color = {0.2f, 0.7f, 0.3f};
         m_entityManager.AddRender(e, r);
 
-        // Make the demo entity controllable via input
         InputComponent ic;
         ic.isControllable = true;
         ic.speed = 360.0f;
@@ -100,27 +88,22 @@ void Game::RunLoop()
         return;
     }
 
-    IWindow* window = &m_window;
-    IRenderer* renderer = &m_renderer;
-
     LOG_INFO("[GAME LOOP STARTING]");
-    while (window->IsRunning())
+    while (m_window.IsRunning())
     {
-        if (!window->ProcessEvent())
+        if (!m_window.ProcessEvent())
             break;
 
         input::Update();
 
         double deltaTime = m_timer.Tick();
-        // Update entities
         m_entityManager.UpdateAll(static_cast<float>(deltaTime));
 
         Update(deltaTime);
 
-        // Queue entity renders
-        m_entityManager.DrawAll(renderer);
+        m_entityManager.DrawAll(&m_renderer);
 
-        renderer->RenderFrame();
+        m_renderer.RenderFrame();
     }
     LOG_INFO("[GAME LOOP ENDED]");
 }
@@ -135,21 +118,18 @@ void Game::Update(double deltaTime)
         return;
 
     m_fps = static_cast<double>(m_frameCount) / m_totalTime;
+    LOG_ENGINE_STATE(m_fps, m_frameCount, m_totalTime);
+
     m_frameCount = 0;
     m_totalTime = 0.0;
-
-    LOG_ENGINE_STATE(m_fps, m_frameCount, m_totalTime);
 }
 
 void Game::Shutdown()
 {
     LOG_INFO("[GAME SHUTTING DOWN]");
 
-    IRenderer* renderer = &m_renderer;
-    renderer->Shutdown();
-
-    IWindow* window = &m_window;
-    window->Shutdown();
+    m_renderer.Shutdown();
+    m_window.Shutdown();
 
     m_initialized = false;
 }

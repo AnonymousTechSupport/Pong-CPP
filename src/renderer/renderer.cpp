@@ -1,6 +1,8 @@
-// ------------------------------------------------------------------------------
-// ---------------------------- RENDERER IMPLEMENTATION ---------------------------
-// ------------------------------------------------------------------------------
+// --- Renderer implementation
+// ---------------------------------------------------------
+// OpenGL 2.1 compatibility-profile renderer.
+// Uses GL_QUADS for rectangles, GL_TRIANGLE_FAN for circles.
+// Draw commands are queued per-frame and flushed during RenderFrame().
 
 #include "renderer.h"
 #include "utils/logger.h"
@@ -76,7 +78,7 @@ void Renderer::RenderFrame()
 {
     glViewport(0, 0, static_cast<GLsizei>(m_width), static_cast<GLsizei>(m_height));
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT);
 
     // Orthographic projection mapped to pixel coordinates (top-left
     // origin).
@@ -107,8 +109,8 @@ void Renderer::RenderFrame()
         SDL_GL_SwapWindow(sdlWindow);
 }
 
-// --- Getters / Setters
-// ---------------------
+// --- Lifecycle
+// ---------------------------------------------------------
 
 void Renderer::Shutdown()
 {
@@ -121,8 +123,6 @@ void Renderer::Shutdown()
     m_window = nullptr;
 }
 
-// ---------------------
-
 void Renderer::QueueRenderRectangle(const RenderRectangle& rect)
 {
     m_renderQueue.emplace_back(rect);
@@ -133,9 +133,8 @@ void Renderer::QueueRenderBall(const RenderBall& cmd)
     m_renderQueue.emplace_back(cmd);
 }
 
-// ------------------------------------------------------------------------------
-// -------------------------- DRAW HELPERS / ACCESSORS --------------------------
-// ------------------------------------------------------------------------------
+// --- Draw helpers
+// ---------------------------------------------------------
 
 void Renderer::DrawRectangle(const RenderRectangle& r)
 {
@@ -164,5 +163,3 @@ void Renderer::DrawCircle(const RenderBall& ball)
     }
     glEnd();
 }
-
-// ---------------------

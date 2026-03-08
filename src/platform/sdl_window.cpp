@@ -1,14 +1,10 @@
 #include "sdl_window.h"
 #include "utils/input.h"
 #include "utils/logger.h"
-#include <SDL3/SDL_init.h>
-#include <SDL3/SDL_properties.h>
-#include <SDL3/SDL_video.h>
 #include <string>
 
-// ------------------------------------------------------------------------------
-// --------------------------- SDL WINDOW IMPLEMENTATION -------------------------
-// ------------------------------------------------------------------------------
+// --- SDL Window implementation
+// ---------------------------------------------------------
 
 Window::Window() = default;
 Window::~Window()
@@ -31,8 +27,7 @@ bool Window::Create()
     }
     else
     {
-        LOG_WARNING("Could not query display mode, falling back to "
-                    "1920x1080");
+        LOG_WARNING("Could not query display mode, falling back to 1920x1080");
     }
 
     m_window = SDL_CreateWindow("Engine", winW, winH, SDL_WINDOW_OPENGL | SDL_WINDOW_BORDERLESS);
@@ -54,8 +49,7 @@ bool Window::ProcessEvent()
     SDL_Event event;
     while (SDL_PollEvent(&event))
     {
-        // Forward all SDL events to the input system before checking
-        // for quit.
+        // Forward all SDL events to the input system before checking for quit.
         Input::Get().ProcessSDLInput(event);
 
         if (event.type == SDL_EVENT_QUIT)
@@ -76,17 +70,10 @@ void Window::Shutdown()
     }
 }
 
-// ------------------------------------------------------------------------------
-// ---------------------------- GETTERS / SETTERS -------------------------------
-// ------------------------------------------------------------------------------
-
 bool Window::IsRunning() const
 {
     return m_running;
 }
-
-// --- Getters / Setters
-// ---------------------
 
 int Window::GetWidth() const
 {
@@ -136,12 +123,9 @@ HWND Window::GetWindowHandle() const
 
     if (!hwnd)
     {
-        LOG_WARNING("Could not retrieve native HWND from SDL window "
-                    "properties");
+        LOG_WARNING("Could not retrieve native HWND from SDL window properties");
         return nullptr;
     }
 
     return static_cast<HWND>(hwnd);
 }
-
-// ---------------------

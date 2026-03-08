@@ -23,7 +23,6 @@ class Game
     void Update(double deltaTime);
     void Shutdown();
 
-  private:
     Window m_window;
     Renderer m_renderer;
     Timer m_timer;

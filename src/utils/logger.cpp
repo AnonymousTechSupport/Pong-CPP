@@ -1,24 +1,29 @@
 #include "logger.h"
 #include <iostream>
 #include <sstream>
+
+#if defined(_WIN32)
 #include <windows.h>
+#endif
 
-// ------------------------------------------------------------------------------
-// ---------------------------- LOGGER IMPLEMENTATION ----------------------------
-// ------------------------------------------------------------------------------
+// --- Logger implementation
+// ---------------------------------------------------------
 
-// ------------------------------------------------------------------------------
-// ------------------------------- LIFECYCLE -----------------------------------
-// ------------------------------------------------------------------------------
 Logger& Logger::Get()
 {
     static Logger instance;
     return instance;
 }
 
-// ------------------------------------------------------------------------------
-// ---------------------------- GETTERS / SETTERS -------------------------------
-// ------------------------------------------------------------------------------
+void Logger::SetDebugEnabled(bool enabled)
+{
+    m_debugEnabled = enabled;
+}
+
+bool Logger::IsDebugEnabled() const
+{
+    return m_debugEnabled;
+}
 
 std::string Logger::GetLevelString(LogLevel level) const
 {
@@ -60,10 +65,12 @@ static void EnsureAnsiEnabled()
 
 void Logger::Log(LogLevel level, const std::string_view& message)
 {
+#if defined(_WIN32)
     std::string msg(message);
     std::wostringstream wss;
     wss << GetLevelString(level).c_str() << " " << msg.c_str() << "\n";
     OutputDebugStringW(wss.str().c_str());
+#endif
 
     EnsureAnsiEnabled();
 
@@ -132,5 +139,3 @@ void Logger::LogEngineState(double fps, int frameCount, double totalTime)
         << " | Total Time: " << totalTime << "s";
     LogInfo(oss.str());
 }
-
-// ------------------

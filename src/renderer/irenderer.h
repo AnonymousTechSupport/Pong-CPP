@@ -1,7 +1,7 @@
 // --- Renderer interface
 // --------------------------------------------------
 #pragma once
-#include "utils/math_utils.h"
+#include "renderer/render_types.h"
 
 class IRenderer
 {

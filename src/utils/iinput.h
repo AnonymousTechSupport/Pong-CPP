@@ -24,8 +24,6 @@ class IInput
 
     virtual bool IsMouseButtonDown(MouseButton button) const = 0;
 
-    // --- Getters / Setters
-    // ---------------------
     virtual Vector2 GetMousePosition() const = 0;
     virtual void SetMousePosition(int x, int y) = 0;
 
