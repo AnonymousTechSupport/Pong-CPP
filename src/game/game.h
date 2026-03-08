@@ -1,8 +1,8 @@
 #pragma once
 #include "game/entities/entity_handler.h"
-#include "platform/sdl_window.h"
-#include "renderer/renderer.h"
-#include "utils/timer.h"
+#include "platform/sdl_window/sdl_window.h"
+#include "renderer/opengl_renderer/opengl_renderer.h"
+#include "utils/timer/timer.h"
 
 // --- Game (top-level coordinator)
 // ---------------------------------------
@@ -23,8 +23,8 @@ class Game
     void Update(double deltaTime);
     void Shutdown();
 
-    Window m_window;
-    Renderer m_renderer;
+    SDLWindow m_window;
+    OpenGLRenderer m_renderer;
     Timer m_timer;
     EntityManager m_entityManager;
 

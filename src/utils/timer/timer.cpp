@@ -1,6 +1,6 @@
 // --- Timer implementation
 // ---------------------------------------------------------
-#include "utils/timer.h"
+#include "timer.h"
 
 void Timer::Start()
 {

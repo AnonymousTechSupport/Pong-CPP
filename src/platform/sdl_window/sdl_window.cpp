@@ -1,18 +1,18 @@
 #include "sdl_window.h"
-#include "utils/input.h"
-#include "utils/logger.h"
+#include "utils/input/input.h"
+#include "utils/logger/logger.h"
 #include <string>
 
 // --- SDL Window implementation
 // ---------------------------------------------------------
 
-Window::Window() = default;
-Window::~Window()
+SDLWindow::SDLWindow() = default;
+SDLWindow::~SDLWindow()
 {
     Shutdown();
 }
 
-bool Window::Create()
+bool SDLWindow::Create()
 {
     SDL_DisplayID displayId = SDL_GetPrimaryDisplay();
     const SDL_DisplayMode* displayMode = SDL_GetCurrentDisplayMode(displayId);
@@ -44,7 +44,7 @@ bool Window::Create()
     return true;
 }
 
-bool Window::ProcessEvent()
+bool SDLWindow::ProcessEvent()
 {
     SDL_Event event;
     while (SDL_PollEvent(&event))
@@ -61,7 +61,7 @@ bool Window::ProcessEvent()
     return true;
 }
 
-void Window::Shutdown()
+void SDLWindow::Shutdown()
 {
     if (m_window)
     {
@@ -70,12 +70,12 @@ void Window::Shutdown()
     }
 }
 
-bool Window::IsRunning() const
+bool SDLWindow::IsRunning() const
 {
     return m_running;
 }
 
-int Window::GetWidth() const
+int SDLWindow::GetWidth() const
 {
     if (!m_window)
     {
@@ -87,7 +87,7 @@ int Window::GetWidth() const
     return w;
 }
 
-int Window::GetHeight() const
+int SDLWindow::GetHeight() const
 {
     if (!m_window)
     {
@@ -99,12 +99,12 @@ int Window::GetHeight() const
     return h;
 }
 
-void* Window::GetNativeWindow() const
+void* SDLWindow::GetNativeWindow() const
 {
     return m_window;
 }
 
-HWND Window::GetWindowHandle() const
+HWND SDLWindow::GetWindowHandle() const
 {
     if (!m_window)
     {

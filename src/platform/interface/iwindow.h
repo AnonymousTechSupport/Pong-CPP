@@ -1,6 +1,3 @@
-// --- Window interface
-// ----------------------------------------------------
-
 #pragma once
 
 class IWindow

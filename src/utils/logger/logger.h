@@ -1,9 +1,6 @@
 #pragma once
 #include <string>
 
-// --- Logger
-// -------------------------------------------------
-
 enum class LogLevel
 {
     Debug,
@@ -20,8 +17,14 @@ class Logger
 
     static Logger& Get();
 
-    void SetDebugEnabled(bool enabled);
-    bool IsDebugEnabled() const;
+    void SetDebugEnabled(bool enabled)
+    {
+        m_debugEnabled = enabled;
+    }
+    bool IsDebugEnabled() const
+    {
+        return m_debugEnabled;
+    }
 
     void Log(LogLevel level, const std::string_view& message);
     void LogDebug(const std::string_view& message);
@@ -39,7 +42,6 @@ class Logger
     bool m_debugEnabled = false;
 };
 
-// Convenience macros
 #define LOG_DEBUG(msg) Logger::Get().LogDebug(msg)
 #define LOG_INFO(msg) Logger::Get().LogInfo(msg)
 #define LOG_WARNING(msg) Logger::Get().LogWarning(msg)

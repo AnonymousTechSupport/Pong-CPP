@@ -1,11 +1,5 @@
-// --- Renderer implementation
-// ---------------------------------------------------------
-// OpenGL 2.1 compatibility-profile renderer.
-// Uses GL_QUADS for rectangles, GL_TRIANGLE_FAN for circles.
-// Draw commands are queued per-frame and flushed during RenderFrame().
-
-#include "renderer.h"
-#include "utils/logger.h"
+#include "opengl_renderer.h"
+#include "utils/logger/logger.h"
 #include <SDL3/SDL.h>
 #include <cmath>
 #include <type_traits>
@@ -21,16 +15,16 @@
 #include <GL/gl.h>
 #include <string>
 
-Renderer::Renderer(IWindow* window) : m_window(window)
+OpenGLRenderer::OpenGLRenderer(IWindow* window) : m_window(window)
 {
 }
 
-Renderer::~Renderer()
+OpenGLRenderer::~OpenGLRenderer()
 {
     Shutdown();
 }
 
-bool Renderer::Initialize()
+bool OpenGLRenderer::Initialize()
 {
     if (!m_window)
     {
@@ -38,9 +32,6 @@ bool Renderer::Initialize()
         return false;
     }
 
-    // Retrieve the native SDL_Window* through the platform-agnostic
-    // interface. The renderer is the only place that ever casts this
-    // pointer.
     SDL_Window* sdlWindow = static_cast<SDL_Window*>(m_window->GetNativeWindow());
     if (!sdlWindow)
     {
@@ -48,7 +39,6 @@ bool Renderer::Initialize()
         return false;
     }
 
-    // Request an OpenGL 2.1 compatibility profile
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
@@ -74,14 +64,12 @@ bool Renderer::Initialize()
     return true;
 }
 
-void Renderer::RenderFrame()
+void OpenGLRenderer::RenderFrame()
 {
     glViewport(0, 0, static_cast<GLsizei>(m_width), static_cast<GLsizei>(m_height));
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // Orthographic projection mapped to pixel coordinates (top-left
-    // origin).
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho(0.0, m_width, m_height, 0.0, -1.0, 1.0);
@@ -109,10 +97,7 @@ void Renderer::RenderFrame()
         SDL_GL_SwapWindow(sdlWindow);
 }
 
-// --- Lifecycle
-// ---------------------------------------------------------
-
-void Renderer::Shutdown()
+void OpenGLRenderer::Shutdown()
 {
     if (m_glContext)
     {
@@ -123,20 +108,17 @@ void Renderer::Shutdown()
     m_window = nullptr;
 }
 
-void Renderer::QueueRenderRectangle(const RenderRectangle& rect)
+void OpenGLRenderer::QueueRenderRectangle(const RenderRectangle& rect)
 {
     m_renderQueue.emplace_back(rect);
 }
 
-void Renderer::QueueRenderBall(const RenderBall& cmd)
+void OpenGLRenderer::QueueRenderBall(const RenderBall& cmd)
 {
     m_renderQueue.emplace_back(cmd);
 }
 
-// --- Draw helpers
-// ---------------------------------------------------------
-
-void Renderer::DrawRectangle(const RenderRectangle& r)
+void OpenGLRenderer::DrawRectangle(const RenderRectangle& r)
 {
     glColor3f(r.color.r, r.color.g, r.color.b);
     glBegin(GL_QUADS);
@@ -147,7 +129,7 @@ void Renderer::DrawRectangle(const RenderRectangle& r)
     glEnd();
 }
 
-void Renderer::DrawCircle(const RenderBall& ball)
+void OpenGLRenderer::DrawCircle(const RenderBall& ball)
 {
     constexpr int segments = 48;
     constexpr float twoPi = 6.28318530717958647692f;

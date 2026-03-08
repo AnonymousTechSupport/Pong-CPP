@@ -1,8 +1,6 @@
 #pragma once
-#include "renderer/irenderer.h"
-#include "utils/iinput.h"
-#include "utils/logger.h"
-#include "utils/math_utils.h"
+#include "renderer/interface/irenderer.h"
+#include "utils/math/math_utils.h"
 #include <memory>
 #include <vector>
 

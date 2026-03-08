@@ -1,6 +1,6 @@
 #include "entity_handler.h"
-#include "utils/iinput.h"
-#include "utils/logger.h"
+#include "utils/input/input.h"
+#include "utils/logger/logger.h"
 
 // --- EntityManager systems ---
 

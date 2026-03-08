@@ -1,8 +1,8 @@
-// --- SDL Window implementation
+// --- SDL Window implementation (concrete)
 // ------------------------------------------
 
 #pragma once
-#include "platform/iwindow.h"
+#include "platform/interface/iwindow.h"
 #include <SDL3/SDL.h>
 
 // Windows-only: forward-declare HWND without pulling in windows.h.
@@ -12,13 +12,13 @@ typedef struct HWND__* HWND;
 using HWND = void*;
 #endif
 
-class Window : public IWindow
+class SDLWindow : public IWindow
 {
   public:
-    Window();
-    Window(const Window&) = delete;
-    Window& operator=(const Window&) = delete;
-    ~Window() override;
+    SDLWindow();
+    SDLWindow(const SDLWindow&) = delete;
+    SDLWindow& operator=(const SDLWindow&) = delete;
+    ~SDLWindow() override;
 
     bool Create() override;
     void Shutdown() override;

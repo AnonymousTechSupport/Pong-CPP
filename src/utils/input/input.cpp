@@ -1,7 +1,5 @@
 #include "input.h"
-#include "utils/logger.h"
-#include <cctype>
-#include <string>
+#include "utils/logger/logger.h"
 
 // --- Input implementation
 // ---------------------------------------------------------

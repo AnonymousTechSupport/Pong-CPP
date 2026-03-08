@@ -23,8 +23,17 @@ project "Engine"
         "src",
         "src/game",
         "src/renderer",
+        "src/renderer/interface",
+        "src/renderer/opengl_renderer",
         "src/platform",
+        "src/platform/interface",
+        "src/platform/sdl_window",
         "src/utils",
+        "src/utils/input",
+        "src/utils/input/interface",
+        "src/utils/logger",
+        "src/utils/timer",
+        "src/utils/math",
         "third_party/SDL3-3.4.2/include"
     }
     

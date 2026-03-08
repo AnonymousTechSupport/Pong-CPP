@@ -1,8 +1,5 @@
 #pragma once
-#include "utils/math_utils.h"
-
-// --- Input interface
-// -----------------------------------------------------
+#include "utils/math/math_utils.h"
 
 class IInput
 {

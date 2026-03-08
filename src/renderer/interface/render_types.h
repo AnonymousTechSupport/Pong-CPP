@@ -3,7 +3,7 @@
 // Render commands queued each frame and flushed by IRenderer::RenderFrame().
 
 #pragma once
-#include "utils/math_utils.h"
+#include "utils/math/math_utils.h"
 #include <variant>
 
 struct RenderRectangle

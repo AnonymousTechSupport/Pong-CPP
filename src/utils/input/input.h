@@ -1,5 +1,5 @@
 #pragma once
-#include "utils/iinput.h"
+#include "utils/input/interface/iinput.h"
 #include <SDL3/SDL.h>
 #include <array>
 #include <bitset>

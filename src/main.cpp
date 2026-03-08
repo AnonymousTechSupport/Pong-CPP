@@ -1,7 +1,7 @@
 // --- Program entry
 // -------------------------------------------------------
 #include "game/game.h"
-#include "utils/logger.h"
+#include "utils/logger/logger.h"
 
 int main()
 {

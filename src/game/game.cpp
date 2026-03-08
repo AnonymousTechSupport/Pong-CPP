@@ -1,5 +1,6 @@
 #include "game.h"
-#include "utils/logger.h"
+#include "utils/input/input.h"
+#include "utils/logger/logger.h"
 #include <SDL3/SDL.h>
 #include <string>
 
@@ -66,11 +67,6 @@ bool Game::Initialize()
         r.shape = ShapeType::Ball;
         r.color = {0.2f, 0.7f, 0.3f};
         m_entityManager.AddRender(e, r);
-
-        InputComponent ic;
-        ic.isControllable = true;
-        ic.speed = 360.0f;
-        m_entityManager.AddInput(e, ic);
     }
 
     m_timer.Start();
@@ -94,7 +90,7 @@ void Game::RunLoop()
         if (!m_window.ProcessEvent())
             break;
 
-        input::Update();
+        Input::Get().Update();
 
         double deltaTime = m_timer.Tick();
         m_entityManager.UpdateAll(static_cast<float>(deltaTime));

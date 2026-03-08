@@ -1,7 +1,7 @@
 // --- Renderer interface
 // --------------------------------------------------
 #pragma once
-#include "renderer/render_types.h"
+#include "renderer/interface/render_types.h"
 
 class IRenderer
 {
